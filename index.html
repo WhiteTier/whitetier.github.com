@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tier Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e8ebe4; --panel:#f6f7f3; --ink:#1c2230; --muted:#5d6676; --line:#cfd4c9; --accent:#2f5d50;
+  --display:"Pixelify Sans","Courier New",monospace; --body:"DM Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1a1f2b; --panel:#232937; --ink:#e9ecf2; --muted:#9aa3b5; --line:#343c4d; --accent:#7fd1b4;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 16px 64px}
+h1{font-family:var(--display);font-size:clamp(34px,6vw,56px);margin:0;line-height:1;letter-spacing:.5px}
+.sub{color:var(--muted);margin:10px 0 28px;max-width:60ch}
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 100%}
+.tab{font:inherit;font-weight:500;border:2px solid var(--line);background:transparent;color:var(--ink);padding:7px 14px;cursor:pointer;
+  clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px))}
+.tab:hover{border-color:var(--accent)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input,select{font:inherit;padding:9px 12px;border:2px solid var(--line);background:var(--panel);color:var(--ink);border-radius:0;min-width:0}
+input{flex:1 1 220px}
+.box{background:var(--panel);border:2px solid var(--line);overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:520px}
+th,td{padding:12px 14px;text-align:left;white-space:nowrap}
+th{font-weight:500;color:var(--muted);font-size:14px;border-bottom:2px solid var(--line);position:sticky;top:0;background:var(--panel)}
+td{border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+td.rank{font-family:var(--display);font-size:22px;width:56px;color:var(--muted)}
+tr.r1 td.rank{color:#c98f00}tr.r2 td.rank{color:#7d8794}tr.r3 td.rank{color:#a8673a}
+tr.r1 td:first-child{box-shadow:inset 5px 0 #e0a800}
+tr.r2 td:first-child{box-shadow:inset 5px 0 #9aa5b3}
+tr.r3 td:first-child{box-shadow:inset 5px 0 #b87a4b}
+.player{display:flex;align-items:center;gap:12px;font-weight:700}
+.av{width:32px;height:32px;image-rendering:pixelated;background:var(--line);display:grid;place-items:center;font-family:var(--display);font-size:16px;color:var(--ink);flex:none}
+.pts{font-family:var(--display);font-size:20px}
+.chip{display:inline-block;min-width:44px;text-align:center;padding:3px 8px;font-weight:700;font-size:13px;color:#16202b;
+  clip-path:polygon(0 3px,3px 3px,3px 0,calc(100% - 3px) 0,calc(100% - 3px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,3px calc(100% - 3px),0 calc(100% - 3px))}
+.none{color:var(--muted)}
+.msg{padding:40px 16px;text-align:center;color:var(--muted)}
+.foot{margin-top:14px;font-size:13px;color:var(--muted)}
+.demo{background:var(--panel);border:2px dashed var(--accent);padding:10px 14px;margin-bottom:14px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title"></h1>
+  <p class="sub" id="tagline"></p>
+  <div id="demo" class="demo" hidden>Showing demo data. Paste your Google Sheet link into <b>SHEET_CSV_URL</b> at the top of the script to show your real leaderboard.</div>
+  <div class="controls">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <input id="search" type="search" placeholder="Search player" aria-label="Search player">
+    <select id="region" aria-label="Filter by region"><option value="">All regions</option></select>
+  </div>
+  <div class="box"><div id="out"><div class="msg">Loading leaderboard…</div></div></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+/* ============ SETTINGS: edit this part ============ */
+const WhiteTier = "Tier Leaderboard";
+const TAGLINE = "Every player's tier in each gamemode, updated live by our testers.";
+// Paste your "Publish to web" CSV link between the quotes:
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/13gySrb12XNU942yfj12mTui8rRzhe0z0QpBUGNKR2B0/edit?usp=sharing";
+const REFRESH_SECONDS = 60;
+// Order of tiers, best first, and the points each one is worth:
+const TIERS = ["HT1","LT1","HT2","LT2","HT3","LT3","HT4","LT4","HT5","LT5"];
+const POINTS = {HT1:60,LT1:44,HT2:32,LT2:20,HT3:10,LT3:6,HT4:4,LT4:2,HT5:1,LT5:0};
+/* ================================================== */
+
+const COLORS = {HT1:"#f2b705",LT1:"#e3c15a",HT2:"#5ad0e6",LT2:"#8cc9d8",HT3:"#5fc27a",LT3:"#98c9a3",HT4:"#d08a55",LT4:"#c7a48a",HT5:"#b5bcc8",LT5:"#cdd2da"};
+
+const DEMO_CSV = `Player,Region,Sword,Crystal,Pot,SMP
+Notch_Fan,NA,HT1,HT2,LT3,HT1
+BlockBoss,EU,LT1,HT1,HT3,
+CreeperKing,AS,HT2,LT2,,LT2
+Steve_Pro,NA,LT2,,HT2,HT3
+AlexPvP,EU,HT3,LT3,LT4,
+Gamer123,AS,LT3,HT4,,LT4
+NewPlayer,NA,HT5,,LT5,`;
+
+let players = [], modes = [], current = "Overall";
+const $ = id => document.getElementById(id);
+document.title = SERVER_NAME;
+$("title").textContent = SERVER_NAME;
+$("tagline").textContent = TAGLINE;
+
+function parseCSV(text){
+  const rows=[]; let row=[], cell="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c=='"'){ if(text[i+1]=='"'){cell+='"';i++} else q=false }
+      else cell+=c;
+    } else if(c=='"') q=true;
+    else if(c==","){row.push(cell);cell=""}
+    else if(c=="\n"||c=="\r"){ if(c=="\r"&&text[i+1]=="\n")i++; row.push(cell);cell="";rows.push(row);row=[] }
+    else cell+=c;
+  }
+  if(cell!==""||row.length){row.push(cell);rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()!==""));
+}
+
+function load(csv){
+  const rows = parseCSV(csv);
+  const head = rows[0].map(h=>h.trim());
+  const pi = head.findIndex(h=>/^(player|name|ign)$/i.test(h));
+  const ri = head.findIndex(h=>/^region$/i.test(h));
+  modes = head.filter((h,i)=>i!==pi && i!==ri && h!=="");
+  players = rows.slice(1).map(r=>{
+    const p = {name:(r[pi]||"").trim(), region:ri>=0?(r[ri]||"").trim().toUpperCase():"", tiers:{}, points:0};
+    modes.forEach(m=>{
+      const t = (r[head.indexOf(m)]||"").trim().toUpperCase();
+      if(TIERS.includes(t)){ p.tiers[m]=t; p.points += POINTS[t]||0; }
+    });
+    return p;
+  }).filter(p=>p.name);
+  buildTabs(); buildRegions(); render();
+}
+
+function buildTabs(){
+  const names = ["Overall",...modes];
+  $("tabs").innerHTML = names.map(n=>`<button class="tab" role="tab" aria-selected="${n===current}" data-m="${esc(n)}">${esc(n)}</button>`).join("");
+  $("tabs").querySelectorAll(".tab").forEach(b=>b.onclick=()=>{current=b.dataset.m;buildTabs();render()});
+}
+function buildRegions(){
+  const sel=$("region"), keep=sel.value;
+  const regs=[...new Set(players.map(p=>p.region).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">All regions</option>'+regs.map(r=>`<option>${esc(r)}</option>`).join("");
+  sel.value=regs.includes(keep)?keep:"";
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function chip(t){return t?`<span class="chip" style="background:${COLORS[t]}">${t}</span>`:`<span class="none">–</span>`}
+function avatar(n){
+  const init=esc(n.trim()[0]||"?").toUpperCase();
+  return `<span class="av">${init}</span>`;
+}
+
+function render(){
+  const q=$("search").value.trim().toLowerCase(), reg=$("region").value;
+  let list = players.filter(p=>(!q||p.name.toLowerCase().includes(q))&&(!reg||p.region===reg));
+  let html;
+  if(current==="Overall"){
+    list = list.filter(p=>p.points>0||Object.keys(p.tiers).length).sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name));
+    html = `<table><thead><tr><th>#</th><th>Player</th><th>Region</th><th>Points</th>${modes.map(m=>`<th>${esc(m)}</th>`).join("")}</tr></thead><tbody>`+
+      list.map((p,i)=>`<tr class="${i<3?"r"+(i+1):""}"><td class="rank">${i+1}</td><td><div class="player">${avatar(p.name)}${esc(p.name)}</div></td><td>${esc(p.region)||'<span class="none">–</span>'}</td><td class="pts">${p.points}</td>${modes.map(m=>`<td>${chip(p.tiers[m])}</td>`).join("")}</tr>`).join("")+`</tbody></table>`;
+  } else {
+    list = list.filter(p=>p.tiers[current]).sort((a,b)=>TIERS.indexOf(a.tiers[current])-TIERS.indexOf(b.tiers[current])||a.name.localeCompare(b.name));
+    html = `<table><thead><tr><th>#</th><th>Player</th><th>Region</th><th>Tier</th></tr></thead><tbody>`+
+      list.map((p,i)=>`<tr class="${i<3?"r"+(i+1):""}"><td class="rank">${i+1}</td><td><div class="player">${avatar(p.name)}${esc(p.name)}</div></td><td>${esc(p.region)||'<span class="none">–</span>'}</td><td>${chip(p.tiers[current])}</td></tr>`).join("")+`</tbody></table>`;
+  }
+  $("out").innerHTML = list.length?html:`<div class="msg">No players found. Try a different search, region or gamemode.</div>`;
+}
+
+async function refresh(){
+  try{
+    if(!SHEET_CSV_URL){ $("demo").hidden=false; load(DEMO_CSV); $("foot").textContent=""; return; }
+    const res = await fetch(SHEET_CSV_URL+(SHEET_CSV_URL.includes("?")?"&":"?")+"t="+Date.now());
+    if(!res.ok) throw new Error(res.status);
+    load(await res.text());
+    $("foot").textContent="Last updated "+new Date().toLocaleTimeString()+" · refreshes automatically";
+  }catch(e){
+    $("out").innerHTML=`<div class="msg">Couldn't load the leaderboard. Check that the Google Sheet is published to the web as CSV and the link in SHEET_CSV_URL is correct.</div>`;
+  }
+}
+$("search").addEventListener("input",render);
+$("region").addEventListener("change",render);
+refresh();
+if(SHEET_CSV_URL) setInterval(refresh,REFRESH_SECONDS*1000);
+</script>
+</body>
+</html>
