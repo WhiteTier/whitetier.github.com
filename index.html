@@ -160,7 +160,7 @@ const REFRESH_SECONDS = 60;
 // Anything else in the sheet (like ??) = not tested = 0 points.
 const GROUPS = ["GT","HT","LT","NT","BT"];
 const GROUP_NAMES = {GT:"Grand Tier",HT:"High Tier",LT:"Low Tier",NT:"New Tier",BT:"Bad Tier"};
-const OWNER = "WHITEGUY50", MADE_IN = "India", MAX_PLAYERS = 30;
+const OWNER = "WHITEGUY", MAX_PLAYERS = 100;
 /* ================================================== */
 
 const TIERS = [], POINTS = {};
@@ -319,7 +319,6 @@ function aboutView(){
   return `<div class="hero"><div><h1>About ${esc(SERVER_NAME)}</h1><p class="sub">A Minecraft PvP tier-testing system where players prove their skills and earn a place in the ranking.</p></div></div>
   <div class="facts">
     <div class="stat"><span>Owner</span><b>${esc(OWNER)}</b></div>
-    <div class="stat"><span>Made in</span><b>${esc(MADE_IN)}</b></div>
     <div class="stat"><span>Platforms</span><b>Bedrock · Java</b></div>
     <div class="stat"><span>Max players</span><b>${MAX_PLAYERS}</b></div>
   </div>
@@ -336,7 +335,7 @@ function aboutView(){
   <div class="card legend">${legend}<p class="none">?? = not tested = 0 points</p></div>
 
   <h2>Rankings</h2>
-  <div class="card step"><p style="margin:0">Every 20 days, the owner posts the Top 1–10 players in the chat. The ranking includes each player's name, current tier, points, and performance against Tier Testers.</p></div>
+  <div class="card step"><p style="margin:0">The owner posts the Top 1–5 players in the chat and they can promote something about them here. The ranking includes each player's name, current tier, points, and performance against Tier Testers.</p></div>
 
   <div class="card cta">
     <div class="slogan" style="margin:0">Prove your skill. Earn your tier. Climb the rankings.</div>
