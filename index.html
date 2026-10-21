@@ -150,10 +150,11 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);bor
 const SERVER_NAME = "WHITETIERS";
 const TAGLINE = "Every player's tier, updated live by our testers.";
 const DISCORD_INVITE = "https://discord.gg/9tnX6EDJ6C";
-// One "Publish to web" CSV link per Google Sheet tab. Leave "" if the tab doesn't exist yet.
-const BEDROCK_CSV_URL = "";   // sheet tab with Bedrock players
-const JAVA_CSV_URL    = "";   // sheet tab with Java players
-const TESTERS_CSV_URL = "";   // sheet tab with testers: Name, Role, Modes
+// Paste your Google Sheet link here (the normal link from the address bar).
+// In Google Sheets: Share > General access > "Anyone with the link" > Viewer.
+const SHEET_LINK = "https://docs.google.com/spreadsheets/d/1AePy3P1nRNtfHKd1nMDvettXnqWe_P2F/edit?usp=sharing&ouid=103060961059522072732&rtpof=true&sd=true";
+// The tab names inside that sheet (must match exactly):
+const TAB_BEDROCK = "Bedrock", TAB_JAVA = "Java", TAB_TESTERS = "Testers";
 const REFRESH_SECONDS = 60;
 // Tier groups, best to worst. Every step down is 2 points: GT1 = 100 ... BT6 = 42.
 // Anything else in the sheet (like ??) = not tested = 0 points.
@@ -243,6 +244,7 @@ function parsePlayers(csv){
 function parseTesters(csv){
   const rows=parseCSV(csv); if(!rows.length) return [];
   const head=rows[0].map(h=>h.trim().toLowerCase());
+  if(!head.includes("name")) return [];
   const g=(r,k)=>{const i=head.indexOf(k);return i>=0?(r[i]||"").trim():""};
   return rows.slice(1).map(r=>({name:g(r,"name")||(r[0]||"").trim(), role:g(r,"role"), modes:g(r,"modes")})).filter(t=>t.name);
 }
@@ -269,13 +271,13 @@ function boardView(key){
   const head = `<div class="hero"><div><h1>${label} Tier List</h1><p class="sub">${esc(TAGLINE)}</p></div>`;
   if(d===undefined) return head+`</div><div class="card"><div class="msg">Loading leaderboard…</div></div>`;
   if(d===null) return head+`</div><div class="card"><div class="msg"><b>${label} tier list is coming soon.</b><br>Check back later or join our Discord to get tested.</div></div>`;
-  if(d.error) return head+`</div><div class="card"><div class="msg">Couldn't load the leaderboard. Check that the Google Sheet tab is published to the web as CSV and the link in the settings is correct.</div></div>`;
+  if(d.error) return head+`</div><div class="card"><div class="msg">Couldn't load the leaderboard. Check that the Google Sheet link is correct, the sheet is shared as Anyone with the link can view, and the tab names are Bedrock, Java and Testers.</div></div>`;
   const m = d.modes.includes(mode[key])||mode[key]==="Overall" ? mode[key] : "Overall"; mode[key]=m;
   const full = ranked(d,m), first = full[0];
   const stats = `<div class="stats"><div class="stat"><span>Ranked players</span><b>${full.length}</b></div>`+
     `<div class="stat"><span>#1 player</span><b>${first?esc(first.p.name):"–"}</b>${first?`<small>${first.score} pts</small>`:""}</div></div>`;
   return head+stats+`</div>`+
-    (demo[key]?demoBox("Showing demo data. Paste your Google Sheet link into <b>BEDROCK_CSV_URL</b> at the top of the script to show your real leaderboard."):"")+
+    (demo[key]?demoBox("Showing demo data. Paste your Google Sheet link into <b>SHEET_LINK</b> at the top of the script to show your real leaderboard."):"")+
     `<div class="pills">${["Overall",...d.modes].map(n=>`<button class="pill" aria-pressed="${n===m}" data-m="${esc(n)}">${esc(n)}</button>`).join("")}</div>`+
     `<div id="top3" class="top3"></div>`+
     `<div class="bar"><input id="q" type="search" placeholder="Search player" aria-label="Search player" value="${esc(query)}"></div>`+
@@ -308,7 +310,7 @@ function testersView(){
   const head=`<div class="hero"><div><h1>Tier Testers</h1><p class="sub">The people who judge your PvP skill. Message one in our Discord to get tested.</p></div></div>`;
   if(d===undefined) return head+`<div class="card"><div class="msg">Loading testers…</div></div>`;
   if(d===null||d.error) return head+`<div class="card"><div class="msg">${d&&d.error?"Couldn't load the tester list.":"The tester list is coming soon."}</div></div>`;
-  return head+(demo.testers?demoBox("Showing demo data. Paste your testers sheet link into <b>TESTERS_CSV_URL</b> at the top of the script."):"")+
+  return head+(demo.testers?demoBox("Showing demo data. Paste your Google Sheet link into <b>SHEET_LINK</b> at the top of the script."):"")+
     `<div class="grid">${d.map(t=>`<div class="card person">${avatar(t.name)}<div><b>${esc(t.name)}</b><span>${esc(t.role)}${t.role&&t.modes?" · ":""}${esc(t.modes)}</span></div></div>`).join("")}</div>`;
 }
 
@@ -363,23 +365,33 @@ function route(){
 window.addEventListener("hashchange",route);
 
 /* ---------- data ---------- */
-async function pull(key,url,parse,demoCsv){
-  if(!url){
+function tabUrl(tab){
+  const m = SHEET_LINK.match(/\/d\/(?!e\/)([\w-]+)/);
+  return m ? `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(tab)}` : "";
+}
+async function pull(key,tab,parse,demoCsv){
+  if(!SHEET_LINK){
     if(demoCsv){ store[key]=parse(demoCsv); demo[key]=true; } else store[key]=null;
     return;
   }
   try{
-    const res=await fetch(url+(url.includes("?")?"&":"?")+"t="+Date.now());
+    const url=tabUrl(tab); if(!url) throw new Error("bad link");
+    const res=await fetch(url+"&t="+Date.now());
     if(!res.ok) throw new Error(res.status);
-    store[key]=parse(await res.text()); demo[key]=false;
+    const v=parse(await res.text());
+    store[key]=(Array.isArray(v)?v.length:v.players.length)?v:null;   // empty tab = coming soon
+    demo[key]=false;
   }catch(e){ store[key]={error:true}; }
 }
 async function refresh(){
   await Promise.all([
-    pull("bedrock",BEDROCK_CSV_URL,parsePlayers,DEMO_BEDROCK),
-    pull("java",JAVA_CSV_URL,parsePlayers,null),
-    pull("testers",TESTERS_CSV_URL,parseTesters,DEMO_TESTERS)
+    pull("bedrock",TAB_BEDROCK,parsePlayers,DEMO_BEDROCK),
+    pull("java",TAB_JAVA,parsePlayers,null),
+    pull("testers",TAB_TESTERS,parseTesters,DEMO_TESTERS)
   ]);
+  // if a tab doesn't exist, Google sends the first tab instead: don't show Bedrock twice
+  const b=store.bedrock, j=store.java;
+  if(b&&j&&b.players&&j.players&&JSON.stringify(b.players.map(p=>p.name))===JSON.stringify(j.players.map(p=>p.name))) store.java=null;
   updated=new Date().toLocaleTimeString();
   render();
 }
