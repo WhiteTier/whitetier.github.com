@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WHITETIERS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6fb; --card:#ffffff; --ink:#111a33; --muted:#5b6682; --line:#e1e5ef; --accent:#2f54d6; --soft:#eef1fa;
+  --display:"Pixelify Sans","Courier New",monospace; --body:"DM Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5;padding-bottom:150px}
+a{color:inherit}
+.wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:.5px;text-decoration:none}
+.logo{width:28px;height:28px;background:var(--ink);display:grid;place-items:center;color:var(--bg);font-size:16px;
+  clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px))}
+.iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.iconbtn:hover{border-color:var(--accent)}
+svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.iconbtn svg{width:20px;height:20px}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px) rotate(-8deg)}40%{transform:translateX(5px) rotate(8deg)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .4s}
+.toast{position:fixed;top:72px;left:50%;transform:translate(-50%,-12px);z-index:40;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* hero */
+.hero{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin:18px 0 26px}
+h1{font-family:var(--display);font-size:clamp(32px,6vw,52px);line-height:1.05;margin:0}
+.sub{color:var(--muted);margin:8px 0 0;max-width:46ch}
+.stats{display:flex;gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 18px;min-width:140px}
+.stat span{display:block;font-size:13px;color:var(--muted)}
+.stat b{font-family:var(--display);font-size:24px;display:block;line-height:1.2;overflow-wrap:anywhere}
+.stat small{color:var(--muted)}
+
+/* pills + search */
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.pill{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 16px;border-radius:999px;cursor:pointer}
+.pill:hover{border-color:var(--accent)}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill:focus-visible,input:focus-visible,.tab:focus-visible,.fab:focus-visible,.btn:focus-visible,.iconbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input{font:inherit;width:100%;padding:12px 16px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px}
+.top3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.tc{padding:18px 18px 16px;position:relative;overflow:hidden}
+.tc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--bar)}
+.tc .rk{font-family:var(--display);font-size:15px;color:var(--muted)}
+.tc .nm{font-weight:700;font-size:18px;overflow-wrap:anywhere}
+.tc .big{font-family:var(--display);font-size:34px;line-height:1.1;margin-top:6px}
+.tc .small{color:var(--muted);font-size:13px}
+.bar{margin-bottom:14px}
+.tablecard{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:13px 16px;text-align:left;white-space:nowrap}
+th{font-weight:500;color:var(--muted);font-size:13px;border-bottom:1px solid var(--line);background:var(--card)}
+td{border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+td.rank{font-family:var(--display);font-size:20px;width:56px;color:var(--muted)}
+tr.r1 td.rank{color:#c98f00}tr.r2 td.rank{color:#7d8794}tr.r3 td.rank{color:#a8673a}
+.player{display:flex;align-items:center;gap:12px;font-weight:700}
+.av{width:34px;height:34px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-family:var(--display);font-size:16px;flex:none}
+.pts{font-family:var(--display);font-size:19px}
+.chip{display:inline-block;min-width:44px;text-align:center;padding:3px 8px;font-weight:700;font-size:13px;color:#16202b;
+  clip-path:polygon(0 3px,3px 3px,3px 0,calc(100% - 3px) 0,calc(100% - 3px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,3px calc(100% - 3px),0 calc(100% - 3px))}
+.none{color:var(--muted)}
+.tag{font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);letter-spacing:.5px}
+.msg{padding:44px 16px;text-align:center;color:var(--muted)}
+.foot{margin:14px 4px 0;font-size:13px;color:var(--muted)}
+.demo{background:var(--soft);border:1px dashed var(--accent);border-radius:14px;padding:10px 14px;margin-bottom:16px;font-size:14px}
+
+/* testers + about */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.person{padding:18px;display:flex;gap:14px;align-items:center}
+.person .av{width:48px;height:48px;border-radius:14px;font-size:22px}
+.person b{display:block;overflow-wrap:anywhere}
+.person span{color:var(--muted);font-size:14px}
+h2{font-family:var(--display);font-size:26px;margin:34px 0 14px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.step{padding:18px}
+.step .n{font-family:var(--display);font-size:30px;color:var(--accent);line-height:1}
+.step p{margin:8px 0 0}
+code{background:var(--soft);padding:2px 6px;border-radius:6px;font-size:.92em}
+.legend{padding:6px 18px}
+.lg{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.lg:last-of-type{border-bottom:0}
+.lgname{min-width:150px}
+.lg .chip{margin:2px 4px 2px 0}
+.facts{display:flex;flex-wrap:wrap;gap:12px}
+.slogan{font-family:var(--display);font-size:22px;margin:26px 0 0}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;padding:11px 20px;border-radius:999px;background:#5865f2;color:#fff;text-decoration:none;margin-top:12px}
+.btn svg{width:20px;height:20px}
+.cta{padding:22px;margin-top:26px}
+
+/* floating discord button + bottom tabs */
+.fab{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:8px;background:#5865f2;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:999px;box-shadow:0 6px 20px rgba(30,40,120,.35)}
+.fab svg{width:20px;height:20px}
+.fab:hover{filter:brightness(1.08)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.navin{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 9px;font-size:12px;font-weight:500;text-decoration:none;color:var(--muted)}
+.tab[aria-current="page"]{color:var(--ink);font-weight:700}
+.tab[aria-current="page"] svg{stroke:var(--accent);stroke-width:2.4}
+.tab[aria-current="page"] span{box-shadow:0 2px 0 var(--accent)}
+
+@media (max-width:640px){
+  .top3{grid-template-columns:1fr}
+  .fab{padding:12px 14px}
+  .stats{width:100%}.stat{flex:1;min-width:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="brand" href="#bedrock"><span class="logo">W</span><span id="brand"></span></a>
+    <button class="iconbtn" id="theme" aria-label="Dark mode (just for fun)"></button>
+  </div>
+  <main id="view"></main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<a class="fab" id="fab" target="_blank" rel="noopener">
+  <svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+  <span>Join Discord · Get tested</span>
+</a>
+
+<nav aria-label="Main">
+  <div class="navin">
+    <a class="tab" href="#bedrock" data-v="bedrock"><svg viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg><span>Bedrock</span></a>
+    <a class="tab" href="#java" data-v="java"><svg viewBox="0 0 24 24"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg><span>Java</span></a>
+    <a class="tab" href="#testers" data-v="testers"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Tier Testers</span></a>
+    <a class="tab" href="#about" data-v="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>About</span></a>
+  </div>
+</nav>
+
+<script>
+/* ============ SETTINGS: edit this part ============ */
+const SERVER_NAME = "WHITETIERS";
+const TAGLINE = "Every player's tier, updated live by our testers.";
+const DISCORD_INVITE = "https://discord.gg/9tnX6EDJ6C";
+// One "Publish to web" CSV link per Google Sheet tab. Leave "" if the tab doesn't exist yet.
+const BEDROCK_CSV_URL = "";   // sheet tab with Bedrock players
+const JAVA_CSV_URL    = "";   // sheet tab with Java players
+const TESTERS_CSV_URL = "";   // sheet tab with testers: Name, Role, Modes
+const REFRESH_SECONDS = 60;
+// Tier groups, best to worst. Every step down is 2 points: GT1 = 100 ... BT6 = 42.
+// Anything else in the sheet (like ??) = not tested = 0 points.
+const GROUPS = ["GT","HT","LT","NT","BT"];
+const GROUP_NAMES = {GT:"Grand Tier",HT:"High Tier",LT:"Low Tier",NT:"New Tier",BT:"Bad Tier"};
+const OWNER = "WHITEGUY50", MADE_IN = "India", MAX_PLAYERS = 30;
+/* ================================================== */
+
+const TIERS = [], POINTS = {};
+GROUPS.forEach((g,gi)=>{ for(let n=1;n<=6;n++){ const t=g+n; POINTS[t]=100-2*(gi*6+n-1); TIERS.push(t); } });
+const GROUP_COLORS = {GT:"#f2b705",HT:"#5ad0e6",LT:"#5fc27a",NT:"#b9a6e8",BT:"#e08a8a"};
+const COLORS = {}; TIERS.forEach(t=>COLORS[t]=GROUP_COLORS[t.slice(0,2)]);
+
+const DEMO_BEDROCK = `Player,Status,Sword,UHC,Diamond SMP,CPVP,Trident PvP,Trident Mace,NETH SMP,Mace
+WHITEGUY,,GT3,HT2,GT1,GT2,LT2,,LT3,
+DRAGON11341,,HT5,HT3,HT2,LT6,LT4,,BT2,HT3
+ZOLYPVP,RETIRED,GT5,HT1,GT2,GT1,HT2,,,
+ELGATO9786,,,LT2,HT1,,,,,GT5
+DISASTERSLAYER1,,BT2,HT2,,HT4,,,,
+STRAIGHTMINNER,,LT1,,,LT3,,,,
+E6QQ,,GT4,,,,,,,
+MINTBOYXZ,,GT6,,,,,,,
+TGRPHEONIX,UNBANNED,,,,,,,,HT2
+HMAQS,,HT4,,,,,,,
+MNXPLAZZ100,,,,,,NT4,,,
+DAVID107632,,BT1,,,,,,,`;
+const DEMO_TESTERS = `Name,Role,Modes
+WHITEGUY50,Owner,All gamemodes`;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = {bedrock:undefined, java:undefined, testers:undefined};   // undefined=loading, null=not set up, {error}=failed
+const demo = {bedrock:false, testers:false};
+const mode = {bedrock:"Overall", java:"Overall"};
+let view = "bedrock", query = "", updated = "";
+
+document.title = SERVER_NAME;
+$("brand").textContent = SERVER_NAME;
+$("fab").href = DISCORD_INVITE;
+
+/* ---------- dark mode button: just for fun, the site stays light ---------- */
+$("theme").innerHTML='<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+const JOKES = [
+  "Dark mode? This is WHITETIER. Lights stay on ☀️",
+  "Nice try. We only do white here 😎",
+  "Dark mode is not in the tier list.",
+  "Error: BT7 not found. Staying bright ✨",
+  "Our testers need to see your PvP. Lights ON 💡",
+  "Still no. Ask the owner on Discord 😂"
+];
+let jn = 0, jt;
+$("theme").onclick = () => {
+  const t = $("toast"), b = $("theme");
+  t.textContent = JOKES[jn++ % JOKES.length];
+  t.classList.add("show");
+  clearTimeout(jt); jt = setTimeout(()=>t.classList.remove("show"), 2600);
+  b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
+};
+
+/* ---------- CSV ---------- */
+function parseCSV(text){
+  const rows=[]; let row=[], cell="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c=='"'){ if(text[i+1]=='"'){cell+='"';i++} else q=false } else cell+=c; }
+    else if(c=='"') q=true;
+    else if(c==","){row.push(cell);cell=""}
+    else if(c=="\n"||c=="\r"){ if(c=="\r"&&text[i+1]=="\n")i++; row.push(cell);cell="";rows.push(row);row=[] }
+    else cell+=c;
+  }
+  if(cell!==""||row.length){row.push(cell);rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()!==""));
+}
+function parsePlayers(csv){
+  const rows=parseCSV(csv); if(!rows.length) return {players:[],modes:[]};
+  const head=rows[0].map(h=>h.trim());
+  let pi=head.findIndex(h=>/^(player|name|ign)$/i.test(h)); if(pi<0) pi=0;
+  const si=head.findIndex(h=>/^status$/i.test(h));
+  const modes=head.filter(h=>h!=="" && !/^(player|name|ign|status|region)$/i.test(h));
+  const players=rows.slice(1).map(r=>{
+    const p={name:(r[pi]||"").trim(), status:si>=0?(r[si]||"").trim().toUpperCase():"", tiers:{}, points:0};
+    modes.forEach(m=>{ const t=(r[head.indexOf(m)]||"").trim().toUpperCase(); if(POINTS[t]!==undefined){p.tiers[m]=t;p.points+=POINTS[t]} });
+    return p;
+  }).filter(p=>p.name);
+  return {players,modes};
+}
+function parseTesters(csv){
+  const rows=parseCSV(csv); if(!rows.length) return [];
+  const head=rows[0].map(h=>h.trim().toLowerCase());
+  const g=(r,k)=>{const i=head.indexOf(k);return i>=0?(r[i]||"").trim():""};
+  return rows.slice(1).map(r=>({name:g(r,"name")||(r[0]||"").trim(), role:g(r,"role"), modes:g(r,"modes")})).filter(t=>t.name);
+}
+
+/* ---------- small helpers ---------- */
+const chip=t=>t?`<span class="chip" style="background:${COLORS[t]}">${t}</span>`:`<span class="none">–</span>`;
+const avatar=n=>`<span class="av">${esc(n.trim()[0]||"?").toUpperCase()}</span>`;
+const tag=p=>p.status?`<span class="tag">${esc(p.status)}</span>`:"";
+const demoBox=txt=>`<div class="demo">${txt}</div>`;
+
+function ranked(d,m){
+  const l = m==="Overall"
+    ? d.players.filter(p=>Object.keys(p.tiers).length).map(p=>({p,score:p.points}))
+    : d.players.filter(p=>p.tiers[m]).map(p=>({p,score:POINTS[p.tiers[m]]}));
+  l.sort((a,b)=>b.score-a.score||a.p.name.localeCompare(b.p.name));
+  l.forEach((x,i)=>x.rank=i+1);
+  return l;
+}
+
+/* ---------- views ---------- */
+function boardView(key){
+  const label = key==="bedrock"?"Bedrock":"Java";
+  const d = store[key];
+  const head = `<div class="hero"><div><h1>${label} Tier List</h1><p class="sub">${esc(TAGLINE)}</p></div>`;
+  if(d===undefined) return head+`</div><div class="card"><div class="msg">Loading leaderboard…</div></div>`;
+  if(d===null) return head+`</div><div class="card"><div class="msg"><b>${label} tier list is coming soon.</b><br>Check back later or join our Discord to get tested.</div></div>`;
+  if(d.error) return head+`</div><div class="card"><div class="msg">Couldn't load the leaderboard. Check that the Google Sheet tab is published to the web as CSV and the link in the settings is correct.</div></div>`;
+  const m = d.modes.includes(mode[key])||mode[key]==="Overall" ? mode[key] : "Overall"; mode[key]=m;
+  const full = ranked(d,m), first = full[0];
+  const stats = `<div class="stats"><div class="stat"><span>Ranked players</span><b>${full.length}</b></div>`+
+    `<div class="stat"><span>#1 player</span><b>${first?esc(first.p.name):"–"}</b>${first?`<small>${first.score} pts</small>`:""}</div></div>`;
+  return head+stats+`</div>`+
+    (demo[key]?demoBox("Showing demo data. Paste your Google Sheet link into <b>BEDROCK_CSV_URL</b> at the top of the script to show your real leaderboard."):"")+
+    `<div class="pills">${["Overall",...d.modes].map(n=>`<button class="pill" aria-pressed="${n===m}" data-m="${esc(n)}">${esc(n)}</button>`).join("")}</div>`+
+    `<div id="top3" class="top3"></div>`+
+    `<div class="bar"><input id="q" type="search" placeholder="Search player" aria-label="Search player" value="${esc(query)}"></div>`+
+    `<div class="card tablecard"><div id="tbl"></div></div>`+
+    `<p class="foot">${updated?"Last updated "+updated+" · refreshes automatically":""}</p>`;
+}
+function fillBoard(key){
+  const d=store[key], m=mode[key], full=ranked(d,m);
+  const bars=["#e0a800","#9aa5b3","#b87a4b"];
+  $("top3").innerHTML = (query?[]:full.slice(0,3)).map((x,i)=>
+    `<div class="card tc" style="--bar:${bars[i]}"><div class="rk">#${x.rank}</div><div class="nm">${esc(x.p.name)} ${tag(x.p)}</div>`+
+    (m==="Overall"
+      ? `<div class="big">${x.score} pts</div><div class="small">${Object.keys(x.p.tiers).length} gamemodes tested</div>`
+      : `<div class="big">${chip(x.p.tiers[m])}</div><div class="small">${x.score} pts</div>`)+`</div>`).join("");
+  const list=full.filter(x=>!query||x.p.name.toLowerCase().includes(query.toLowerCase()));
+  const row=(x,cells)=>`<tr class="${x.rank<=3?"r"+x.rank:""}"><td class="rank">${x.rank}</td><td><div class="player">${avatar(x.p.name)}${esc(x.p.name)}${tag(x.p)}</div></td>${cells}</tr>`;
+  let html;
+  if(m==="Overall"){
+    html=`<table><thead><tr><th>#</th><th>Player</th><th>Points</th>${d.modes.map(n=>`<th>${esc(n)}</th>`).join("")}</tr></thead><tbody>`+
+      list.map(x=>row(x,`<td class="pts">${x.score}</td>${d.modes.map(n=>`<td>${chip(x.p.tiers[n])}</td>`).join("")}`)).join("")+`</tbody></table>`;
+  } else {
+    html=`<table><thead><tr><th>#</th><th>Player</th><th>Tier</th><th>Points</th></tr></thead><tbody>`+
+      list.map(x=>row(x,`<td>${chip(x.p.tiers[m])}</td><td class="pts">${x.score}</td>`)).join("")+`</tbody></table>`;
+  }
+  $("tbl").innerHTML = list.length?html:`<div class="msg">No players found. Try a different search or gamemode.</div>`;
+}
+
+function testersView(){
+  const d=store.testers;
+  const head=`<div class="hero"><div><h1>Tier Testers</h1><p class="sub">The people who judge your PvP skill. Message one in our Discord to get tested.</p></div></div>`;
+  if(d===undefined) return head+`<div class="card"><div class="msg">Loading testers…</div></div>`;
+  if(d===null||d.error) return head+`<div class="card"><div class="msg">${d&&d.error?"Couldn't load the tester list.":"The tester list is coming soon."}</div></div>`;
+  return head+(demo.testers?demoBox("Showing demo data. Paste your testers sheet link into <b>TESTERS_CSV_URL</b> at the top of the script."):"")+
+    `<div class="grid">${d.map(t=>`<div class="card person">${avatar(t.name)}<div><b>${esc(t.name)}</b><span>${esc(t.role)}${t.role&&t.modes?" · ":""}${esc(t.modes)}</span></div></div>`).join("")}</div>`;
+}
+
+function aboutView(){
+  const legend=GROUPS.map(g=>`<div class="lg"><div class="lgname"><b>${g}</b> · ${GROUP_NAMES[g]}</div><div>${TIERS.filter(t=>t.startsWith(g)).map(t=>`<span class="chip" style="background:${COLORS[t]}">${t} · ${POINTS[t]}</span>`).join(" ")}</div></div>`).join("");
+  return `<div class="hero"><div><h1>About ${esc(SERVER_NAME)}</h1><p class="sub">A Minecraft PvP tier-testing system where players prove their skills and earn a place in the ranking.</p></div></div>
+  <div class="facts">
+    <div class="stat"><span>Owner</span><b>${esc(OWNER)}</b></div>
+    <div class="stat"><span>Made in</span><b>${esc(MADE_IN)}</b></div>
+    <div class="stat"><span>Platforms</span><b>Bedrock · Java</b></div>
+    <div class="stat"><span>Max players</span><b>${MAX_PLAYERS}</b></div>
+  </div>
+
+  <h2>How to get tested</h2>
+  <div class="steps">
+    <div class="card step"><div class="n">1</div><p>Go to the <b>unknown</b> section in our Discord and say: <code>Tier Tester, I want to get a tier.</code></p></div>
+    <div class="card step"><div class="n">2</div><p>A Tier Tester contacts you and brings you into the server for your Tier Test, where your PvP skills are judged.</p></div>
+    <div class="card step"><div class="n">3</div><p>You may be placed <b>UP</b> or <b>LOW</b> in your tier, depending on your performance and how the testers judge your skill.</p></div>
+    <div class="card step"><div class="n">4</div><p>The tester posts your result in <b>#tier-list</b>, like <code>GT6 • GT1 • LT6 • NT2</code>. Your tier shows your current PvP performance.</p></div>
+  </div>
+
+  <h2>Tier system</h2>
+  <div class="card legend">${legend}<p class="none">?? = not tested = 0 points</p></div>
+
+  <h2>Rankings</h2>
+  <div class="card step"><p style="margin:0">Every 20 days, the owner posts the Top 1–10 players in the chat. The ranking includes each player's name, current tier, points, and performance against Tier Testers.</p></div>
+
+  <div class="card cta">
+    <div class="slogan" style="margin:0">Prove your skill. Earn your tier. Climb the rankings.</div>
+    <a class="btn" href="${esc(DISCORD_INVITE)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>Join our Discord and get tested</a>
+  </div>`;
+}
+
+/* ---------- render + routing ---------- */
+function render(){
+  const wasTyping = document.activeElement && document.activeElement.id==="q";
+  document.querySelectorAll(".tab").forEach(a=>{ if(a.dataset.v===view) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
+  const isBoard = view==="bedrock"||view==="java";
+  $("view").innerHTML = isBoard?boardView(view):view==="testers"?testersView():aboutView();
+  if(isBoard && store[view] && !store[view].error){
+    fillBoard(view);
+    document.querySelectorAll(".pill").forEach(b=>b.onclick=()=>{ mode[view]=b.dataset.m; render(); });
+    const q=$("q"); q.oninput=()=>{ query=q.value.trim(); fillBoard(view); };
+    if(wasTyping){ q.focus(); q.setSelectionRange(q.value.length,q.value.length); }
+  }
+}
+function route(){
+  const h=(location.hash||"#bedrock").slice(1);
+  view=["bedrock","java","testers","about"].includes(h)?h:"bedrock";
+  query=""; render(); window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+
+/* ---------- data ---------- */
+async function pull(key,url,parse,demoCsv){
+  if(!url){
+    if(demoCsv){ store[key]=parse(demoCsv); demo[key]=true; } else store[key]=null;
+    return;
+  }
+  try{
+    const res=await fetch(url+(url.includes("?")?"&":"?")+"t="+Date.now());
+    if(!res.ok) throw new Error(res.status);
+    store[key]=parse(await res.text()); demo[key]=false;
+  }catch(e){ store[key]={error:true}; }
+}
+async function refresh(){
+  await Promise.all([
+    pull("bedrock",BEDROCK_CSV_URL,parsePlayers,DEMO_BEDROCK),
+    pull("java",JAVA_CSV_URL,parsePlayers,null),
+    pull("testers",TESTERS_CSV_URL,parseTesters,DEMO_TESTERS)
+  ]);
+  updated=new Date().toLocaleTimeString();
+  render();
+}
+route();
+refresh();
+setInterval(refresh,REFRESH_SECONDS*1000);
+</script>
+</body>
+</html>
