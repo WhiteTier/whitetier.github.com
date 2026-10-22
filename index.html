@@ -181,15 +181,15 @@ TGRPHEONIX,UNBANNED,,,,,,,,HT2
 HMAQS,,HT4,,,,,,,
 MNXPLAZZ100,,,,,,NT4,,,
 DAVID107632,,BT1,,,,,,,`;
-const DEMO_TESTERS = `Name,Role,Modes
-WHITEGUY50,Owner,All gamemodes`;
+const DEMO_TESTERS = `Name,Role,Modes,Tested
+WHITEGUY50,Owner,All gamemodes,0`;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const store = {bedrock:undefined, java:undefined, testers:undefined};   // undefined=loading, null=not set up, {error}=failed
 const demo = {bedrock:false, testers:false};
 const mode = {bedrock:"Overall", java:"Overall"};
-let view = "bedrock", query = "", updated = "";
+let view = "bedrock", query = "", updated = "", testersHasCount = false;
 
 document.title = SERVER_NAME;
 $("brand").textContent = SERVER_NAME;
@@ -250,7 +250,8 @@ function parseTesters(csv){
   const head=rows[0].map(h=>h.trim().toLowerCase());
   if(!head.includes("name")) return [];
   const g=(r,k)=>{const i=head.indexOf(k);return i>=0?(r[i]||"").trim():""};
-  return rows.slice(1).map(r=>({name:g(r,"name")||(r[0]||"").trim(), role:g(r,"role"), modes:g(r,"modes")})).filter(t=>t.name);
+  testersHasCount=head.includes("tested");
+  return rows.slice(1).map(r=>({name:g(r,"name")||(r[0]||"").trim(), role:g(r,"role"), modes:g(r,"modes"), tested:parseInt(g(r,"tested"),10)||0})).filter(t=>t.name);
 }
 
 /* ---------- small helpers ---------- */
@@ -311,11 +312,15 @@ function fillBoard(key){
 
 function testersView(){
   const d=store.testers;
-  const head=`<div class="hero"><div><h1>Tier Testers</h1><p class="sub">The people who judge your PvP skill. Message one in our Discord to get tested.</p></div></div>`;
+  const head=`<div class="hero"><div><h1>Tier Testers</h1><p class="sub">Ranked by total players tested. Message one in our Discord to get tested.</p></div></div>`;
   if(d===undefined) return head+`<div class="card"><div class="msg">Loading testers…</div></div>`;
   if(d===null||d.error) return head+`<div class="card"><div class="msg">${d&&d.error?"Couldn't load the tester list.":"The tester list is coming soon."}</div></div>`;
+  const list=testersHasCount?[...d].sort((a,b)=>b.tested-a.tested||a.name.localeCompare(b.name)):[...d];
+  let rk=0, prev=null; list.forEach((t,i)=>{ if(t.tested!==prev){rk=i+1;prev=t.tested} t.rank=rk; });
+  const sub=t=>[t.role,t.modes].filter(Boolean).map(esc).join(" · ");
   return head+(demo.testers?demoBox("Showing demo data. Paste your Google Sheet link into <b>SHEET_LINK</b> at the top of the script."):"")+
-    `<div class="grid">${d.map(t=>`<div class="card person">${avatar(t.name)}<div><b>${esc(t.name)}</b><span>${esc(t.role)}${t.role&&t.modes?" · ":""}${esc(t.modes)}</span></div></div>`).join("")}</div>`;
+    `<div class="card tablecard"><table style="min-width:0"><thead><tr>${testersHasCount?"<th>#</th>":""}<th>Tester</th>${testersHasCount?"<th>Total tested</th>":""}</tr></thead><tbody>`+
+    list.map(t=>`<tr class="${testersHasCount&&t.rank<=3?"r"+t.rank:""}">${testersHasCount?`<td class="rank">${t.rank}</td>`:""}<td><div class="player">${avatar(t.name)}<div>${esc(t.name)}<div class="none" style="font-weight:400;font-size:13px">${sub(t)}</div></div></div></td>${testersHasCount?`<td class="pts">${t.tested}</td>`:""}</tr>`).join("")+`</tbody></table></div>`;
 }
 
 function aboutView(){
