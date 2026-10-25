@@ -11,7 +11,7 @@
 <style>
 :root{
   --bg:#f4f6fb; --card:#ffffff; --ink:#111a33; --muted:#5b6682; --line:#e1e5ef; --accent:#2f54d6; --soft:#eef1fa;
-  --display:"DM Sans",system-ui,sans-serif; --dur:1s; --ease:cubic-bezier(.22,.8,.24,1); --step:.1s; --body:"DM Sans",system-ui,sans-serif;
+  --display:"DM Sans",system-ui,sans-serif; --dur:1s; --ease:cubic-bezier(.22,.8,.24,1); --slide:cubic-bezier(.6,.05,.25,1); --step:.1s; --body:"DM Sans",system-ui,sans-serif;
 }
 html[data-theme="dark"]{
   --bg:#0d1120; --card:#171d30; --ink:#eef1f8; --muted:#98a2bb; --line:#272f48; --accent:#8aa6ff; --soft:#1f2740;
@@ -58,14 +58,18 @@ h1{font-family:var(--display);font-size:clamp(28px,6vw,46px);line-height:1.1;mar
 .stat span{display:block;font-size:13px;color:var(--muted)}
 .stat b{font-family:var(--display);font-size:24px;display:block;line-height:1.2;overflow-wrap:anywhere}
 
-/* gamemode tabs (scroll sideways) */
-.mtabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 14px;margin:0 -2px;scrollbar-width:none}
+/* gamemode tabs: one bar, a highlight slides to the picked tab */
+.mtabs{position:relative;display:flex;gap:4px;overflow-x:auto;padding:6px;margin-bottom:16px;border:1px solid var(--line);border-radius:22px;background:var(--card);scrollbar-width:none;cursor:grab}
 .mtabs::-webkit-scrollbar{display:none}
-.mt{flex:none;display:flex;align-items:center;gap:8px;font:inherit;font-weight:500;padding:6px 16px 6px 6px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
-.mt:hover{border-color:var(--c,var(--accent))}
-.mt[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mtabs:active{cursor:grabbing}
+.slider{position:absolute;left:0;top:0;width:0;height:0;border-radius:16px;background:var(--ink);pointer-events:none;z-index:0;transition:left .8s var(--slide),top .8s var(--slide),width .8s var(--slide),height .8s var(--slide)}
+.mt{position:relative;z-index:1;flex:none;min-width:84px;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;font-weight:500;font-size:13px;padding:10px 12px 8px;border-radius:16px;border:0;background:transparent;color:var(--muted);cursor:pointer;transition:color .6s}
+.mt:hover{color:var(--ink)}
+.mt[aria-pressed="true"]{color:var(--bg);font-weight:700}
+.mt span:last-child{text-align:center;line-height:1.25}
+@media (min-width:760px){.mtabs{flex-wrap:wrap;overflow:visible;cursor:default}.mt{flex:1 1 84px;padding:10px 6px 8px}}
 .mi,.ic{display:grid;place-items:center;border-radius:50%;color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--card));border:1px solid color-mix(in srgb,var(--c) 40%,transparent);flex:none}
-.mi{width:30px;height:30px}.mi svg{width:17px;height:17px}
+.mi{width:34px;height:34px}.mi svg{width:19px;height:19px}
 .mt:hover .mi svg{animation:wiggle 1s ease-in-out}
 .mt[aria-pressed="true"] .mi svg{animation:wiggle 1.2s ease-in-out}
 .enter .hero{animation:fadeUp var(--dur) var(--ease) both}
@@ -146,12 +150,12 @@ code{background:var(--soft);padding:2px 6px;border-radius:6px;font-size:.92em}
 .fab svg{width:22px;height:22px;animation:nudge 7s ease-in-out infinite}
 .fab:hover{filter:brightness(1.08)}
 nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.navin{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.navin{position:relative;max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.ind{position:absolute;top:0;left:0;width:36px;height:3px;border-radius:0 0 4px 4px;background:var(--accent);transition:left .8s var(--slide)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 9px;font-size:12px;font-weight:500;text-decoration:none;color:var(--muted)}
 .tab:hover svg{animation:wiggle 1s ease-in-out}
 .tab[aria-current="page"]{color:var(--ink);font-weight:700}
 .tab[aria-current="page"] svg{stroke:var(--accent);stroke-width:2.4;animation:bounce .9s ease-in-out}
-.tab[aria-current="page"] span{box-shadow:0 2px 0 var(--accent)}
 
 @media (max-width:640px){
   .fab{padding:12px 14px}
@@ -176,6 +180,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);bor
 
 <nav aria-label="Main">
   <div class="navin">
+    <span class="ind" id="navind"></span>
     <a class="tab" href="#bedrock" data-v="bedrock"><svg viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg><span>Bedrock</span></a>
     <a class="tab" href="#java" data-v="java"><svg viewBox="0 0 24 24"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg><span>Java</span></a>
     <a class="tab" href="#testers" data-v="testers"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Tier Testers</span></a>
@@ -357,11 +362,30 @@ function headText(key){
     ? [`Overall ${label} PvP Rankings`, `${count} players ranked by points across ${d.modes.length} gamemodes`]
     : [`${esc(m)} ${label} Rankings`, `${count} players ranked in ${esc(m)}`];
 }
+function placeSlider(animate){        // moves the highlight behind the picked gamemode tab
+  const sl=$("slider"), a=document.querySelector('.mt[aria-pressed="true"]'); if(!sl||!a) return;
+  if(!animate) sl.style.transition="none";
+  sl.style.left=a.offsetLeft+"px"; sl.style.top=a.offsetTop+"px"; sl.style.width=a.offsetWidth+"px"; sl.style.height=a.offsetHeight+"px";
+  if(!animate){ void sl.offsetWidth; sl.style.transition=""; }
+}
+let navReady=false;
+function placeNavInd(animate){        // moves the blue bar over the picked bottom tab
+  const ind=$("navind"), a=document.querySelector('.tab[aria-current="page"]'); if(!ind||!a) return;
+  if(!animate) ind.style.transition="none";
+  ind.style.left=(a.offsetLeft+(a.offsetWidth-36)/2)+"px";
+  if(!animate){ void ind.offsetWidth; ind.style.transition=""; }
+}
+let dragMoved=false, dragBar=null, dragX=0, dragL=0;
+window.addEventListener("pointermove",e=>{ if(!dragBar) return; const dx=e.clientX-dragX; if(Math.abs(dx)>5){ dragMoved=true; dragBar.scrollLeft=dragL-dx; } });
+window.addEventListener("pointerup",()=>{ dragBar=null; });
+window.addEventListener("resize",()=>{ placeSlider(false); placeNavInd(false); });
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ placeSlider(false); placeNavInd(false); });
 function selectMode(key,m){          // changes only the list and heading, the rest of the page stays still
   mode[key]=m;
   document.querySelectorAll(".mt").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===m)));
   const [t,sTxt]=headText(key); $("htitle").innerHTML=t; $("hsub").innerHTML=sTxt;
   const v=$("view"); v.classList.remove("enter"); fillBoard(key); void v.offsetWidth; v.classList.add("enter");
+  placeSlider(true);
   const act=document.querySelector('.mt[aria-pressed="true"]'); if(act) act.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"});
 }
 function boardView(key){
@@ -374,8 +398,8 @@ function boardView(key){
   const m = d.modes.includes(mode[key])||mode[key]==="Overall" ? mode[key] : "Overall"; mode[key]=m;
   const [title,subtxt] = headText(key);
   const tabs = ["Overall",...d.modes].map((n,i)=>{ const mi=modeIcon(n);
-    return `<button class="mt" aria-pressed="${n===m}" data-m="${esc(n)}" style="--c:${mi.c};animation-delay:${i*40}ms"><span class="mi">${svgIcon(mi.p)}</span><span>${esc(n)}</span></button>`; }).join("");
-  return `<div class="mtabs" id="mtabs">${tabs}</div>`+
+    return `<button class="mt" aria-pressed="${n===m}" data-m="${esc(n)}" style="--c:${mi.c}"><span class="mi">${svgIcon(mi.p)}</span><span>${esc(n)}</span></button>`; }).join("");
+  return `<div class="mtabs" id="mtabs"><span class="slider" id="slider"></span>${tabs}</div>`+
     `<div class="hero"><div><h1 id="htitle">${title}</h1><p class="sub" id="hsub">${subtxt}</p></div></div>`+
     (demo[key]?demoBox("Showing demo data. Paste your Google Sheet link into <b>SHEET_LINK</b> at the top of the script to show your real leaderboard."):"")+
     `<button class="infobtn" id="infobtn" aria-expanded="${infoOpen}">${INFO_ICON}Information</button>`+
@@ -436,11 +460,17 @@ function render(enter){
   const wasTyping = document.activeElement && document.activeElement.id==="q";
   document.querySelectorAll(".tab").forEach(a=>{ if(a.dataset.v===view) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
   const isBoard = view==="bedrock"||view==="java";
+  placeNavInd(navReady); navReady=true;
   $("view").className = enter?"enter":"";
   $("view").innerHTML = isBoard?boardView(view):view==="testers"?testersView():aboutView();
   if(isBoard && store[view] && !store[view].error){
     fillBoard(view);
     document.querySelectorAll(".mt").forEach(b=>b.onclick=()=>selectMode(view,b.dataset.m));
+    const bar=$("mtabs");              // mouse users can scroll the tab bar with the wheel or by dragging it
+    bar.addEventListener("wheel",e=>{ if(bar.scrollWidth>bar.clientWidth && Math.abs(e.deltaY)>Math.abs(e.deltaX)){ bar.scrollLeft+=e.deltaY; e.preventDefault(); } },{passive:false});
+    bar.addEventListener("pointerdown",e=>{ if(e.pointerType==="mouse"){ dragBar=bar; dragX=e.clientX; dragL=bar.scrollLeft; dragMoved=false; } });
+    bar.addEventListener("click",e=>{ if(dragMoved){ e.stopPropagation(); e.preventDefault(); dragMoved=false; } },true);
+    placeSlider(false);
     $("infobtn").onclick=()=>{ infoOpen=!infoOpen; $("infopanel").hidden=!infoOpen; $("infobtn").setAttribute("aria-expanded",infoOpen); };
     const q=$("q"); q.oninput=()=>{ query=q.value.trim(); $("view").className=""; fillBoard(view); };
     $("list").onclick=e=>{ const b=e.target.closest(".tb"); if(b) showToast(`${b.dataset.m} · ${b.dataset.t} · ${POINTS[b.dataset.t]} pts`); };
