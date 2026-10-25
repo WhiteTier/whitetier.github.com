@@ -13,11 +13,24 @@
   --bg:#f4f6fb; --card:#ffffff; --ink:#111a33; --muted:#5b6682; --line:#e1e5ef; --accent:#2f54d6; --soft:#eef1fa;
   --display:"Pixelify Sans","Courier New",monospace; --body:"DM Sans",system-ui,sans-serif;
 }
+html[data-theme="dark"]{
+  --bg:#0d1120; --card:#171d30; --ink:#eef1f8; --muted:#98a2bb; --line:#272f48; --accent:#8aa6ff; --soft:#1f2740;
+}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5;padding-bottom:150px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5;padding-bottom:150px;transition:background .25s,color .25s}
 a{color:inherit}
 .wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+
+/* animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.4) rotate(-20deg)}to{opacity:1;transform:none}}
+@keyframes wiggle{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-16deg) scale(1.2)}60%{transform:rotate(14deg) scale(1.2)}85%{transform:rotate(-6deg) scale(1.1)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}35%{transform:translateY(-7px)}65%{transform:translateY(1px)}}
+@keyframes nudge{0%,70%,100%{transform:rotate(0)}78%{transform:rotate(-14deg)}86%{transform:rotate(12deg)}94%{transform:rotate(-6deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px) rotate(-8deg)}40%{transform:translateX(5px) rotate(8deg)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .4s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* top bar */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
@@ -26,52 +39,66 @@ a{color:inherit}
   clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px))}
 .iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;display:grid;place-items:center}
 .iconbtn:hover{border-color:var(--accent)}
+.iconbtn:hover svg{animation:wiggle .5s}
 svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg.dc{fill:currentColor;stroke:none}
 .iconbtn svg{width:20px;height:20px}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px) rotate(-8deg)}40%{transform:translateX(5px) rotate(8deg)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-.shake{animation:shake .4s}
 .toast{position:fixed;top:72px;left:50%;transform:translate(-50%,-12px);z-index:40;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 /* hero */
-.hero{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin:18px 0 26px}
-h1{font-family:var(--display);font-size:clamp(32px,6vw,52px);line-height:1.05;margin:0}
-.sub{color:var(--muted);margin:8px 0 0;max-width:46ch}
-.stats{display:flex;gap:12px}
+.hero{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin:10px 0 18px}
+h1{font-family:var(--display);font-size:clamp(28px,6vw,46px);line-height:1.1;margin:0}
+.sub{color:var(--muted);margin:8px 0 0;max-width:52ch}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 18px;min-width:140px}
 .stat span{display:block;font-size:13px;color:var(--muted)}
 .stat b{font-family:var(--display);font-size:24px;display:block;line-height:1.2;overflow-wrap:anywhere}
-.stat small{color:var(--muted)}
 
-/* pills + search */
-.pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.pill{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 16px;border-radius:999px;cursor:pointer}
-.pill:hover{border-color:var(--accent)}
-.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.pill:focus-visible,input:focus-visible,.tab:focus-visible,.fab:focus-visible,.btn:focus-visible,.iconbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* gamemode tabs (scroll sideways) */
+.mtabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 14px;margin:0 -2px;scrollbar-width:none}
+.mtabs::-webkit-scrollbar{display:none}
+.mt{flex:none;display:flex;align-items:center;gap:8px;font:inherit;font-weight:500;padding:6px 16px 6px 6px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.mt:hover{border-color:var(--c,var(--accent))}
+.mt[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mi,.ic{display:grid;place-items:center;border-radius:50%;color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--card));border:1px solid color-mix(in srgb,var(--c) 40%,transparent);flex:none}
+.mi{width:30px;height:30px}.mi svg{width:17px;height:17px}
+.mt:hover .mi svg{animation:wiggle .5s}
+.enter .mt[aria-pressed="true"] .mi svg{animation:wiggle .7s .15s}
+.enter .mt{animation:fadeUp .35s both}
+
+.infobtn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:14px;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;margin-bottom:14px}
+.infobtn svg{width:18px;height:18px}
+.infobtn:hover svg{animation:wiggle .5s}
+.infopanel{padding:16px 18px;margin-bottom:14px}
+.pill:focus-visible,input:focus-visible,.tab:focus-visible,.fab:focus-visible,.btn:focus-visible,.iconbtn:focus-visible,.mt:focus-visible,.infobtn:focus-visible,.tb:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 input{font:inherit;width:100%;padding:12px 16px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px}
-
-/* cards */
-.card{background:var(--card);border:1px solid var(--line);border-radius:22px}
-.top3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
-.tc{padding:18px 18px 16px;position:relative;overflow:hidden}
-.tc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--bar)}
-.tc .rk{font-family:var(--display);font-size:15px;color:var(--muted)}
-.tc .nm{font-weight:700;font-size:18px;overflow-wrap:anywhere}
-.tc .big{font-family:var(--display);font-size:34px;line-height:1.1;margin-top:6px}
-.tc .small{color:var(--muted);font-size:13px}
 .bar{margin-bottom:14px}
-.tablecard{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:560px}
-th,td{padding:13px 16px;text-align:left;white-space:nowrap}
-th{font-weight:500;color:var(--muted);font-size:13px;border-bottom:1px solid var(--line);background:var(--card)}
-td{border-bottom:1px solid var(--line)}
-tr:last-child td{border-bottom:0}
-td.rank{font-family:var(--display);font-size:20px;width:56px;color:var(--muted)}
-tr.r1 td.rank{color:#c98f00}tr.r2 td.rank{color:#7d8794}tr.r3 td.rank{color:#a8673a}
-.player{display:flex;align-items:center;gap:12px;font-weight:700}
-.av{width:34px;height:34px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-family:var(--display);font-size:16px;flex:none}
-.pts{font-family:var(--display);font-size:19px}
+
+/* player cards (MCTiers style) */
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px}
+.plist{display:grid;gap:12px}
+@media (min-width:900px){.plist{grid-template-columns:1fr 1fr}}
+.pc{display:flex;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.enter .pc{animation:fadeUp .4s both;animation-delay:calc(var(--i,0)*45ms)}
+.rkb{flex:none;width:58px;display:grid;place-items:center;font-family:var(--display);font-size:24px;background:var(--soft);color:var(--muted)}
+.rkb.r1{background:linear-gradient(160deg,#ffd75a,#e0a800);color:#4a3600}
+.rkb.r2{background:linear-gradient(160deg,#dfe5ee,#9aa5b3);color:#2d3542}
+.rkb.r3{background:linear-gradient(160deg,#e3a779,#b87a4b);color:#3d2210}
+.pcb{flex:1;min-width:0;padding:14px 16px}
+.pt{display:flex;align-items:center;gap:12px}
+.av{width:42px;height:42px;border-radius:12px;background:var(--soft);display:grid;place-items:center;font-family:var(--display);font-size:20px;flex:none}
+.pn{min-width:0}
+.nm2{font-weight:700;font-size:17px;overflow-wrap:anywhere;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ps{color:var(--muted);font-size:13px}
+.tnum{margin-left:auto;text-align:right;font-family:var(--display);font-size:28px;line-height:1}
+.tnum small{display:block;font-family:var(--body);font-size:12px;color:var(--muted)}
+.tl{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin:14px 0 8px}
+.tbs{display:flex;flex-wrap:wrap;gap:10px 12px}
+.tb{display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:0;cursor:pointer;font:inherit}
+.enter .tb{animation:popIn .45s both;animation-delay:calc(var(--i,0)*45ms + var(--j,0)*55ms + 120ms)}
+.ic{width:40px;height:40px}.ic svg{width:21px;height:21px}
+.tb:hover .ic svg,.tb:focus-visible .ic svg,.tb:active .ic svg{animation:wiggle .5s}
+.tb:hover .ic{border-color:var(--c)}
 .chip{display:inline-block;min-width:44px;text-align:center;padding:3px 8px;font-weight:700;font-size:13px;color:#16202b;
   clip-path:polygon(0 3px,3px 3px,3px 0,calc(100% - 3px) 0,calc(100% - 3px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,3px calc(100% - 3px),0 calc(100% - 3px))}
 .none{color:var(--muted)}
@@ -80,12 +107,7 @@ tr.r1 td.rank{color:#c98f00}tr.r2 td.rank{color:#7d8794}tr.r3 td.rank{color:#a86
 .foot{margin:14px 4px 0;font-size:13px;color:var(--muted)}
 .demo{background:var(--soft);border:1px dashed var(--accent);border-radius:14px;padding:10px 14px;margin-bottom:16px;font-size:14px}
 
-/* testers + about */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.person{padding:18px;display:flex;gap:14px;align-items:center}
-.person .av{width:48px;height:48px;border-radius:14px;font-size:22px}
-.person b{display:block;overflow-wrap:anywhere}
-.person span{color:var(--muted);font-size:14px}
+/* about */
 h2{font-family:var(--display);font-size:26px;margin:34px 0 14px}
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .step{padding:18px}
@@ -101,24 +123,23 @@ code{background:var(--soft);padding:2px 6px;border-radius:6px;font-size:.92em}
 .slogan{font-family:var(--display);font-size:22px;margin:26px 0 0}
 .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;padding:11px 20px;border-radius:999px;background:#5865f2;color:#fff;text-decoration:none;margin-top:12px}
 .btn svg{width:22px;height:22px}
+.btn:hover svg{animation:wiggle .5s}
 .cta{padding:22px;margin-top:26px}
 
 /* floating discord button + bottom tabs */
 .fab{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:8px;background:#5865f2;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:999px;box-shadow:0 6px 20px rgba(30,40,120,.35)}
-.fab svg{width:22px;height:22px}
-svg.dc{fill:currentColor;stroke:none}
+.fab svg{width:22px;height:22px;animation:nudge 4s ease-in-out infinite}
 .fab:hover{filter:brightness(1.08)}
 nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 .navin{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 9px;font-size:12px;font-weight:500;text-decoration:none;color:var(--muted)}
+.tab:hover svg{animation:wiggle .5s}
 .tab[aria-current="page"]{color:var(--ink);font-weight:700}
-.tab[aria-current="page"] svg{stroke:var(--accent);stroke-width:2.4}
+.tab[aria-current="page"] svg{stroke:var(--accent);stroke-width:2.4;animation:bounce .55s}
 .tab[aria-current="page"] span{box-shadow:0 2px 0 var(--accent)}
 
 @media (max-width:640px){
-  .top3{grid-template-columns:1fr}
   .fab{padding:12px 14px}
-  .stats{width:100%}.stat{flex:1;min-width:0}
 }
 </style>
 </head>
@@ -126,7 +147,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);bor
 <div class="wrap">
   <div class="topbar">
     <a class="brand" href="#bedrock"><span class="logo">W</span><span id="brand"></span></a>
-    <button class="iconbtn" id="theme" aria-label="Dark mode (just for fun)"></button>
+    <button class="iconbtn" id="theme" aria-label="Switch light and dark mode"></button>
   </div>
   <main id="view"></main>
 </div>
@@ -170,6 +191,31 @@ GROUPS.forEach((g,gi)=>{ for(let n=1;n<=6;n++){ const t=g+n; POINTS[t]=100-2*(gi
 const GROUP_COLORS = {GT:"#f2b705",HT:"#5ad0e6",LT:"#5fc27a",NT:"#b9a6e8",BT:"#e08a8a"};
 const COLORS = {}; TIERS.forEach(t=>COLORS[t]=GROUP_COLORS[t.slice(0,2)]);
 
+/* gamemode icons: the site picks one from the gamemode's name; unknown names get a shield */
+const P = {
+  trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-1.04 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98 1.04 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  sword:'<path d="m11 19-6-6"/><path d="m5 21-2-2"/><path d="m8 16-4 4"/><path d="M9.5 17.5 21 6V3h-3L6.5 14.5"/>',
+  heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  gem:'<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>',
+  crystal:'<path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z"/>',
+  trident:'<path d="M12 22V7"/><path d="M6 3v5a6 6 0 0 0 12 0V3"/><path d="M12 3v4"/>',
+  tmace:'<path d="M12 20V7"/><path d="M6 3v5a6 6 0 0 0 12 0V3"/><path d="M12 3v4"/><circle cx="12" cy="21" r="1.5"/>',
+  mace:'<circle cx="15" cy="9" r="5"/><path d="m11.5 12.5-8 8"/><path d="M15 2v2M15 14v2M8 9h2M20 9h2"/>',
+  flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  flask:'<path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>',
+  axe:'<path d="m14 12-8.5 8.5a2.12 2.12 0 1 1-3-3L11 9"/><path d="M15 13 9 7l4-4 6 6h3a8 8 0 0 1-7 7z"/>',
+  shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>'
+};
+const ICON_COLORS = {trophy:"#e0a800",sword:"#5b8def",heart:"#ef5b73",gem:"#22b8cf",crystal:"#a55eea",trident:"#1cc5a0",tmace:"#f0883e",mace:"#8d99ae",flame:"#f2603a",flask:"#e056a0",axe:"#c98a5a",shield:"#7a8cff"};
+function modeIcon(name){
+  const n=String(name).toLowerCase();
+  const k = n==="overall"?"trophy" : n.includes("trident")&&n.includes("mace")?"tmace" : n.includes("trident")?"trident" : n.includes("mace")?"mace"
+    : n.includes("sword")?"sword" : n.includes("uhc")?"heart" : n.includes("diamond")?"gem" : n.includes("cpvp")||n.includes("crystal")?"crystal"
+    : n.includes("neth")?"flame" : n.includes("pot")?"flask" : n.includes("axe")?"axe" : "shield";
+  return {p:P[k], c:ICON_COLORS[k]};
+}
+const svgIcon = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+
 const DEMO_BEDROCK = `Player,Status,Sword,UHC,Diamond SMP,CPVP,Trident PvP,Trident Mace,NETH SMP,Mace
 WHITEGUY,,GT3,HT2,GT1,GT2,LT2,,LT3,
 DRAGON11341,,HT5,HT3,HT2,LT6,LT4,,BT2,HT3
@@ -191,33 +237,34 @@ const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const store = {bedrock:undefined, java:undefined, testers:undefined};   // undefined=loading, null=not set up, {error}=failed
 const demo = {bedrock:false, testers:false};
 const mode = {bedrock:"Overall", java:"Overall"};
-let view = "bedrock", query = "", updated = "", testersHasCount = false;
+let view = "bedrock", query = "", updated = "", testersHasCount = false, infoOpen = false;
 
 document.title = SERVER_NAME;
 $("brand").textContent = SERVER_NAME;
 $("fab").href = DISCORD_INVITE;
 
-/* ---------- dark mode button: just for fun, the site stays light ---------- */
-$("theme").innerHTML='<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
-const JOKES = [
-  "Dark mode? This is WHITETIER. Lights stay on",
-  "Nice try. We only do white here",
-  "Dark mode is not in the tier list.",
-  "Error: BT7 not found. Staying bright",
-  "Our testers need to see your PvP. Lights ON",
-  "Still no. Ask the owner on Discord",
-  "nope!",
-  "Wrong Button?",
-  "Skill issue",
-  "Bad Aim?"
-];
-let jn = 0, jt;
-$("theme").onclick = () => {
-  const t = $("toast"), b = $("theme");
-  t.textContent = JOKES[jn++ % JOKES.length];
-  t.classList.add("show");
-  clearTimeout(jt); jt = setTimeout(()=>t.classList.remove("show"), 2600);
-  b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
+/* ---------- toast ---------- */
+let tt;
+function showToast(text){
+  const t=$("toast"); t.textContent=text; t.classList.add("show");
+  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),2400);
+}
+
+/* ---------- dark mode (light by default, remembers your choice) ---------- */
+const SUN='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+const MOON='<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+function setTheme(t,save){
+  document.documentElement.dataset.theme=t;
+  $("theme").innerHTML = t==="dark"?SUN:MOON;
+  if(save){ try{localStorage.setItem("theme",t)}catch(e){} }
+}
+let savedTheme="light"; try{ savedTheme=localStorage.getItem("theme")||"light" }catch(e){}
+setTheme(savedTheme,false);
+$("theme").onclick=()=>{
+  const dark=document.documentElement.dataset.theme!=="dark";
+  setTheme(dark?"dark":"light",true);
+  showToast(dark?"Dark mode on":"Light mode on");
+  const b=$("theme"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
 };
 
 /* ---------- CSV ---------- */
@@ -257,11 +304,15 @@ function parseTesters(csv){
 }
 
 /* ---------- small helpers ---------- */
-const chip=t=>t?`<span class="chip" style="background:${COLORS[t]}">${t}</span>`:`<span class="none">–</span>`;
+const chip=t=>`<span class="chip" style="background:${COLORS[t]}">${t}</span>`;
 const avatar=n=>`<span class="av">${esc(n.trim()[0]||"?").toUpperCase()}</span>`;
 const tag=p=>p.status?`<span class="tag">${esc(p.status)}</span>`:"";
 const demoBox=txt=>`<div class="demo">${txt}</div>`;
+const INFO_ICON='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
 
+function legendHTML(){
+  return GROUPS.map(g=>`<div class="lg"><div class="lgname"><b>${g}</b> · ${GROUP_NAMES[g]}</div><div>${TIERS.filter(t=>t.startsWith(g)).map(t=>`<span class="chip" style="background:${COLORS[t]}">${t} · ${POINTS[t]}</span>`).join(" ")}</div></div>`).join("");
+}
 function ranked(d,m){
   const l = m==="Overall"
     ? d.players.filter(p=>Object.keys(p.tiers).length).map(p=>({p,score:p.points}))
@@ -272,44 +323,44 @@ function ranked(d,m){
 }
 
 /* ---------- views ---------- */
+function badge(n,t,j){
+  const mi=modeIcon(n);
+  return `<button type="button" class="tb" data-m="${esc(n)}" data-t="${t}" style="--c:${mi.c};--j:${j}" aria-label="${esc(n)} ${t}"><span class="ic">${svgIcon(mi.p)}</span>${chip(t)}</button>`;
+}
+function playerCard(x,i,m,d){
+  const p=x.p, mods=m==="Overall"?d.modes.filter(n=>p.tiers[n]):[m];
+  const sub=m==="Overall"?`${x.score} pts · ${mods.length} ${mods.length===1?"gamemode":"gamemodes"}`:`${x.score} pts`;
+  return `<article class="pc" style="--i:${Math.min(i,12)}"><div class="rkb ${x.rank<=3?"r"+x.rank:""}">${x.rank}</div>`+
+    `<div class="pcb"><div class="pt">${avatar(p.name)}<div class="pn"><div class="nm2">${esc(p.name)} ${tag(p)}</div><div class="ps">${sub}</div></div></div>`+
+    `<div class="tl">TIERS</div><div class="tbs">${mods.map((n,j)=>badge(n,p.tiers[n],j)).join("")}</div></div></article>`;
+}
+
 function boardView(key){
   const label = key==="bedrock"?"Bedrock":"Java";
   const d = store[key];
-  const head = `<div class="hero"><div><h1>${label} Tier List</h1><p class="sub">${esc(TAGLINE)}</p></div>`;
-  if(d===undefined) return head+`</div><div class="card"><div class="msg">Loading leaderboard…</div></div>`;
-  if(d===null) return head+`</div><div class="card"><div class="msg"><b>${label} tier list is coming soon.</b><br>Check back later or join our Discord to get tested.</div></div>`;
-  if(d.error) return head+`</div><div class="card"><div class="msg">Couldn't load the leaderboard. Check that the Google Sheet link is correct, the sheet is shared as Anyone with the link can view, and the tab names are Bedrock, Java and Testers.</div></div>`;
+  const head = `<div class="hero"><div><h1>${label} Rankings</h1><p class="sub">${esc(TAGLINE)}</p></div></div>`;
+  if(d===undefined) return head+`<div class="card"><div class="msg">Loading leaderboard…</div></div>`;
+  if(d===null) return head+`<div class="card"><div class="msg"><b>${label} tier list is coming soon.</b><br>Check back later or join our Discord to get tested.</div></div>`;
+  if(d.error) return head+`<div class="card"><div class="msg">Couldn't load the leaderboard. Check that the Google Sheet link is correct, the sheet is shared as Anyone with the link can view, and the tab names are Bedrock, Java and Testers.</div></div>`;
   const m = d.modes.includes(mode[key])||mode[key]==="Overall" ? mode[key] : "Overall"; mode[key]=m;
-  const full = ranked(d,m), first = full[0];
-  const stats = `<div class="stats"><div class="stat"><span>Ranked players</span><b>${full.length}</b></div>`+
-    `<div class="stat"><span>#1 player</span><b>${first?esc(first.p.name):"–"}</b>${first?`<small>${first.score} pts</small>`:""}</div></div>`;
-  return head+stats+`</div>`+
+  const count = ranked(d,m).length;
+  const title = m==="Overall" ? `Overall ${label} PvP Rankings` : `${esc(m)} ${label} Rankings`;
+  const subtxt = m==="Overall" ? `${count} players ranked by points across ${d.modes.length} gamemodes` : `${count} players ranked in ${esc(m)}`;
+  const tabs = ["Overall",...d.modes].map((n,i)=>{ const mi=modeIcon(n);
+    return `<button class="mt" aria-pressed="${n===m}" data-m="${esc(n)}" style="--c:${mi.c};animation-delay:${i*40}ms"><span class="mi">${svgIcon(mi.p)}</span><span>${esc(n)}</span></button>`; }).join("");
+  return `<div class="mtabs">${tabs}</div>`+
+    `<div class="hero"><div><h1>${title}</h1><p class="sub">${subtxt}</p></div></div>`+
     (demo[key]?demoBox("Showing demo data. Paste your Google Sheet link into <b>SHEET_LINK</b> at the top of the script to show your real leaderboard."):"")+
-    `<div class="pills">${["Overall",...d.modes].map(n=>`<button class="pill" aria-pressed="${n===m}" data-m="${esc(n)}">${esc(n)}</button>`).join("")}</div>`+
-    `<div id="top3" class="top3"></div>`+
+    `<button class="infobtn" id="infobtn" aria-expanded="${infoOpen}">${INFO_ICON}Information</button>`+
+    `<div class="card infopanel" id="infopanel" ${infoOpen?"":"hidden"}><p style="margin:0 0 6px">Every tier is worth points (GT1 = 100 down to BT6 = 42). A player's overall score is the sum of their points in every gamemode. Tap an icon on a player to see the gamemode and tier.</p><div class="legend" style="padding:0">${legendHTML()}</div></div>`+
     `<div class="bar"><input id="q" type="search" placeholder="Search player" aria-label="Search player" value="${esc(query)}"></div>`+
-    `<div class="card tablecard"><div id="tbl"></div></div>`+
-    `<p class="foot">${updated?"Last updated "+updated+" · refreshes automatically":""}</p>`;
+    `<div id="list" class="plist"></div>`+
+    `<p class="foot" id="foot">${updated?"Checked "+updated+" · refreshes automatically":""}</p>`;
 }
 function fillBoard(key){
-  const d=store[key], m=mode[key], full=ranked(d,m);
-  const bars=["#e0a800","#9aa5b3","#b87a4b"];
-  $("top3").innerHTML = (query?[]:full.slice(0,3)).map((x,i)=>
-    `<div class="card tc" style="--bar:${bars[i]}"><div class="rk">#${x.rank}</div><div class="nm">${esc(x.p.name)} ${tag(x.p)}</div>`+
-    (m==="Overall"
-      ? `<div class="big">${x.score} pts</div><div class="small">${Object.keys(x.p.tiers).length} gamemodes tested</div>`
-      : `<div class="big">${chip(x.p.tiers[m])}</div><div class="small">${x.score} pts</div>`)+`</div>`).join("");
-  const list=full.filter(x=>!query||x.p.name.toLowerCase().includes(query.toLowerCase()));
-  const row=(x,cells)=>`<tr class="${x.rank<=3?"r"+x.rank:""}"><td class="rank">${x.rank}</td><td><div class="player">${avatar(x.p.name)}${esc(x.p.name)}${tag(x.p)}</div></td>${cells}</tr>`;
-  let html;
-  if(m==="Overall"){
-    html=`<table><thead><tr><th>#</th><th>Player</th><th>Points</th>${d.modes.map(n=>`<th>${esc(n)}</th>`).join("")}</tr></thead><tbody>`+
-      list.map(x=>row(x,`<td class="pts">${x.score}</td>${d.modes.map(n=>`<td>${chip(x.p.tiers[n])}</td>`).join("")}`)).join("")+`</tbody></table>`;
-  } else {
-    html=`<table><thead><tr><th>#</th><th>Player</th><th>Tier</th><th>Points</th></tr></thead><tbody>`+
-      list.map(x=>row(x,`<td>${chip(x.p.tiers[m])}</td><td class="pts">${x.score}</td>`)).join("")+`</tbody></table>`;
-  }
-  $("tbl").innerHTML = list.length?html:`<div class="msg">No players found. Try a different search or gamemode.</div>`;
+  const d=store[key], m=mode[key];
+  const list=ranked(d,m).filter(x=>!query||x.p.name.toLowerCase().includes(query.toLowerCase()));
+  $("list").innerHTML = list.length ? list.map((x,i)=>playerCard(x,i,m,d)).join("") : `<div class="card"><div class="msg">No players found. Try a different search or gamemode.</div></div>`;
 }
 
 function testersView(){
@@ -321,12 +372,11 @@ function testersView(){
   let rk=0, prev=null; list.forEach((t,i)=>{ if(t.tested!==prev){rk=i+1;prev=t.tested} t.rank=rk; });
   const sub=t=>[t.role,t.modes].filter(Boolean).map(esc).join(" · ");
   return head+(demo.testers?demoBox("Showing demo data. Paste your Google Sheet link into <b>SHEET_LINK</b> at the top of the script."):"")+
-    `<div class="card tablecard"><table style="min-width:0"><thead><tr>${testersHasCount?"<th>#</th>":""}<th>Tester</th>${testersHasCount?"<th>Total tested</th>":""}</tr></thead><tbody>`+
-    list.map(t=>`<tr class="${testersHasCount&&t.rank<=3?"r"+t.rank:""}">${testersHasCount?`<td class="rank">${t.rank}</td>`:""}<td><div class="player">${avatar(t.name)}<div>${esc(t.name)}<div class="none" style="font-weight:400;font-size:13px">${sub(t)}</div></div></div></td>${testersHasCount?`<td class="pts">${t.tested}</td>`:""}</tr>`).join("")+`</tbody></table></div>`;
+    `<div class="plist">`+list.map((t,i)=>`<article class="pc" style="--i:${Math.min(i,12)}">${testersHasCount?`<div class="rkb ${t.rank<=3?"r"+t.rank:""}">${t.rank}</div>`:""}`+
+      `<div class="pcb"><div class="pt">${avatar(t.name)}<div class="pn"><div class="nm2">${esc(t.name)}</div><div class="ps">${sub(t)}</div></div>${testersHasCount?`<div class="tnum">${t.tested}<small>tested</small></div>`:""}</div></div></article>`).join("")+`</div>`;
 }
 
 function aboutView(){
-  const legend=GROUPS.map(g=>`<div class="lg"><div class="lgname"><b>${g}</b> · ${GROUP_NAMES[g]}</div><div>${TIERS.filter(t=>t.startsWith(g)).map(t=>`<span class="chip" style="background:${COLORS[t]}">${t} · ${POINTS[t]}</span>`).join(" ")}</div></div>`).join("");
   return `<div class="hero"><div><h1>About ${esc(SERVER_NAME)}</h1><p class="sub">A Minecraft PvP tier-testing system where players prove their skills and earn a place in the ranking.</p></div></div>
   <div class="facts">
     <div class="stat"><span>Owner</span><b>${esc(OWNER)}</b></div>
@@ -343,34 +393,37 @@ function aboutView(){
   </div>
 
   <h2>Tier system</h2>
-  <div class="card legend">${legend}<p class="none">?? = not tested = 0 points</p></div>
+  <div class="card legend">${legendHTML()}<p class="none">?? = not tested = 0 points</p></div>
 
   <h2>Rankings</h2>
   <div class="card step"><p style="margin:0">The owner posts the Top 1–5 players in the chat and they can promote something about them here. The ranking includes each player's name, current tier, points, and performance against Tier Testers.</p></div>
 
   <div class="card cta">
     <div class="slogan" style="margin:0">Prove your skill. Earn your tier. Climb the rankings.</div>
-    <a class="btn" href="${esc(DISCORD_INVITE)}" target="_blank" rel="noopener"><svg class="dc" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>Join our Discord and get tested</a>
+    <a class="btn" href="${esc(DISCORD_INVITE)}" target="_blank" rel="noopener"><svg class="dc" viewBox="0 0 24 24">${$("fab").querySelector("path").outerHTML}</svg>Join our Discord and get tested</a>
   </div>`;
 }
 
 /* ---------- render + routing ---------- */
-function render(){
+function render(enter){
   const wasTyping = document.activeElement && document.activeElement.id==="q";
   document.querySelectorAll(".tab").forEach(a=>{ if(a.dataset.v===view) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
   const isBoard = view==="bedrock"||view==="java";
+  $("view").className = enter?"enter":"";
   $("view").innerHTML = isBoard?boardView(view):view==="testers"?testersView():aboutView();
   if(isBoard && store[view] && !store[view].error){
     fillBoard(view);
-    document.querySelectorAll(".pill").forEach(b=>b.onclick=()=>{ mode[view]=b.dataset.m; render(); });
-    const q=$("q"); q.oninput=()=>{ query=q.value.trim(); fillBoard(view); };
+    document.querySelectorAll(".mt").forEach(b=>b.onclick=()=>{ mode[view]=b.dataset.m; render(true); });
+    $("infobtn").onclick=()=>{ infoOpen=!infoOpen; $("infopanel").hidden=!infoOpen; $("infobtn").setAttribute("aria-expanded",infoOpen); };
+    const q=$("q"); q.oninput=()=>{ query=q.value.trim(); $("view").className=""; fillBoard(view); };
+    $("list").onclick=e=>{ const b=e.target.closest(".tb"); if(b) showToast(`${b.dataset.m} · ${b.dataset.t} · ${POINTS[b.dataset.t]} pts`); };
     if(wasTyping){ q.focus(); q.setSelectionRange(q.value.length,q.value.length); }
   }
 }
 function route(){
   const h=(location.hash||"#bedrock").slice(1);
   view=["bedrock","java","testers","about"].includes(h)?h:"bedrock";
-  query=""; render(); window.scrollTo(0,0);
+  query=""; render(true); window.scrollTo(0,0);
 }
 window.addEventListener("hashchange",route);
 
@@ -393,6 +446,7 @@ async function pull(key,tab,parse,demoCsv){
     demo[key]=false;
   }catch(e){ store[key]={error:true}; }
 }
+let lastSig="", loadedOnce=false;
 async function refresh(){
   await Promise.all([
     pull("bedrock",TAB_BEDROCK,parsePlayers,DEMO_BEDROCK),
@@ -403,7 +457,10 @@ async function refresh(){
   const b=store.bedrock, j=store.java;
   if(b&&j&&b.players&&j.players&&JSON.stringify(b.players.map(p=>p.name))===JSON.stringify(j.players.map(p=>p.name))) store.java=null;
   updated=new Date().toLocaleTimeString();
-  render();
+  const sig=JSON.stringify([store.bedrock,store.java,store.testers]);
+  if(sig!==lastSig){ lastSig=sig; render(!loadedOnce); }               // only redraw when the sheet actually changed
+  else if($("foot")) $("foot").textContent="Checked "+updated+" · refreshes automatically";
+  loadedOnce=true;
 }
 route();
 refresh();
