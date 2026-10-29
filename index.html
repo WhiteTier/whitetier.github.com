@@ -193,14 +193,11 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);bor
 const SERVER_NAME = "WhiteTire";
 const TAGLINE = "Every player's tier, updated live by our testers.";
 const DISCORD_INVITE = "https://discord.gg/9tnX6EDJ6C";
-// Paste your Google Sheet link here (the normal link from the address bar).
-// In Google Sheets: Share > General access > "Anyone with the link" > Viewer.
-const SHEET_LINK = "https://docs.google.com/spreadsheets/d/1AePy3P1nRNtfHKd1nMDvettXnqWe_P2F/edit?usp=sharing&ouid=103060961059522072732&rtpof=true&sd=true";
-// The tab names inside that sheet (must match exactly):
-const TAB_BEDROCK = "Bedrock", TAB_JAVA = "Java", TAB_TESTERS = "Testers";
+// Where the leaderboard data comes from: the bot's read-only link.
+const DATA_URL = "https://whitetier.hidenplay.net/api/tiers";
 const REFRESH_SECONDS = 60;
 // Tier groups, best to worst. Every step down is 2 points: GT1 = 100 ... BT6 = 42.
-// Anything else in the sheet (like ??) = not tested = 0 points.
+// Anything else (like ??) = not tested = 0 points.
 const GROUPS = ["GT","HT","LT","NT","BT"];
 const GROUP_NAMES = {GT:"Grand Tier",HT:"High Tier",LT:"Low Tier",NT:"New Tier",BT:"Bad Tier"};
 const OWNER = "WHITEGUY", MAX_PLAYERS = 100;
@@ -235,22 +232,6 @@ function modeIcon(name){
   return {p:P[k], c:ICON_COLORS[k]};
 }
 const svgIcon = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
-
-const DEMO_BEDROCK = `Player,Status,Sword,UHC,Diamond SMP,CPVP,Trident PvP,Trident Mace,NETH SMP,Mace
-WHITEGUY,,GT3,HT2,GT1,GT2,LT2,,LT3,
-DRAGON11341,,HT5,HT3,HT2,LT6,LT4,,BT2,HT3
-ZOLYPVP,RETIRED,GT5,HT1,GT2,GT1,HT2,,,
-ELGATO9786,,,LT2,HT1,,,,,GT5
-DISASTERSLAYER1,,BT2,HT2,,HT4,,,,
-STRAIGHTMINNER,,LT1,,,LT3,,,,
-E6QQ,,GT4,,,,,,,
-MINTBOYXZ,,GT6,,,,,,,
-TGRPHEONIX,UNBANNED,,,,,,,,HT2
-HMAQS,,HT4,,,,,,,
-MNXPLAZZ100,,,,,,NT4,,,
-DAVID107632,,BT1,,,,,,,`;
-const DEMO_TESTERS = `Name,Role,Modes,Tested
-WHITEGUY50,Owner,All gamemodes,0`;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -287,40 +268,18 @@ $("theme").onclick=()=>{
   const b=$("theme"); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
 };
 
-/* ---------- CSV ---------- */
-function parseCSV(text){
-  const rows=[]; let row=[], cell="", q=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i];
-    if(q){ if(c=='"'){ if(text[i+1]=='"'){cell+='"';i++} else q=false } else cell+=c; }
-    else if(c=='"') q=true;
-    else if(c==","){row.push(cell);cell=""}
-    else if(c=="\n"||c=="\r"){ if(c=="\r"&&text[i+1]=="\n")i++; row.push(cell);cell="";rows.push(row);row=[] }
-    else cell+=c;
-  }
-  if(cell!==""||row.length){row.push(cell);rows.push(row)}
-  return rows.filter(r=>r.some(x=>x.trim()!==""));
-}
-function parsePlayers(csv){
-  const rows=parseCSV(csv); if(!rows.length) return {players:[],modes:[]};
-  const head=rows[0].map(h=>h.trim());
-  let pi=head.findIndex(h=>/^(player|name|ign)$/i.test(h)); if(pi<0) pi=0;
-  const si=head.findIndex(h=>/^status$/i.test(h));
-  const modes=head.filter(h=>h!=="" && !/^(player|name|ign|status|region)$/i.test(h));
-  const players=rows.slice(1).map(r=>{
-    const p={name:(r[pi]||"").trim(), status:si>=0?(r[si]||"").trim().toUpperCase():"", tiers:{}, points:0};
-    modes.forEach(m=>{ const t=(r[head.indexOf(m)]||"").trim().toUpperCase(); if(POINTS[t]!==undefined){p.tiers[m]=t;p.points+=POINTS[t]} });
+/* ---------- turn the bot's data into what the page uses ---------- */
+function buildPlayers(list,modes){
+  const players=(list||[]).map(r=>{
+    const p={name:String(r.player||"").trim(), status:String(r.status||"").trim().toUpperCase(), tiers:{}, points:0};
+    modes.forEach(m=>{ const t=String((r.tiers||{})[m]||"").trim().toUpperCase(); if(POINTS[t]!==undefined){p.tiers[m]=t;p.points+=POINTS[t]} });
     return p;
   }).filter(p=>p.name);
   return {players,modes};
 }
-function parseTesters(csv){
-  const rows=parseCSV(csv); if(!rows.length) return [];
-  const head=rows[0].map(h=>h.trim().toLowerCase());
-  if(!head.includes("name")) return [];
-  const g=(r,k)=>{const i=head.indexOf(k);return i>=0?(r[i]||"").trim():""};
-  testersHasCount=head.includes("tested");
-  return rows.slice(1).map(r=>({name:g(r,"name")||(r[0]||"").trim(), role:g(r,"role"), modes:g(r,"modes"), tested:parseInt(g(r,"tested"),10)||0})).filter(t=>t.name);
+function buildTesters(list){
+  testersHasCount=true;
+  return (list||[]).map(t=>({name:String(t.name||"").trim(), role:String(t.role||"").trim(), modes:String(t.modes||"").trim(), tested:parseInt(t.tested,10)||0})).filter(t=>t.name);
 }
 
 /* ---------- small helpers ---------- */
@@ -394,14 +353,14 @@ function boardView(key){
   const head = `<div class="hero"><div><h1>${label} Rankings</h1><p class="sub">${esc(TAGLINE)}</p></div></div>`;
   if(d===undefined) return head+`<div class="card"><div class="msg">Loading leaderboard…</div></div>`;
   if(d===null) return head+`<div class="card"><div class="msg"><b>${label} tier list is coming soon.</b><br>Check back later or join our Discord to get tested.</div></div>`;
-  if(d.error) return head+`<div class="card"><div class="msg">Couldn't load the leaderboard. Check that the Google Sheet link is correct, the sheet is shared as Anyone with the link can view, and the tab names are Bedrock, Java and Testers.</div></div>`;
+  if(d.error) return head+`<div class="card"><div class="msg">Couldn't load the leaderboard right now. Please check your internet connection or try again in a moment.</div></div>`;
   const m = d.modes.includes(mode[key])||mode[key]==="Overall" ? mode[key] : "Overall"; mode[key]=m;
   const [title,subtxt] = headText(key);
   const tabs = ["Overall",...d.modes].map((n,i)=>{ const mi=modeIcon(n);
     return `<button class="mt" aria-pressed="${n===m}" data-m="${esc(n)}" style="--c:${mi.c}"><span class="mi">${svgIcon(mi.p)}</span><span>${esc(n)}</span></button>`; }).join("");
   return `<div class="mtabs" id="mtabs"><span class="slider" id="slider"></span>${tabs}</div>`+
     `<div class="hero"><div><h1 id="htitle">${title}</h1><p class="sub" id="hsub">${subtxt}</p></div></div>`+
-    (demo[key]?demoBox("Showing demo data. Paste your Google Sheet link into <b>SHEET_LINK</b> at the top of the script to show your real leaderboard."):"")+
+    (demo[key]?demoBox("Showing demo data."):"")+
     `<button class="infobtn" id="infobtn" aria-expanded="${infoOpen}">${INFO_ICON}Information</button>`+
     `<div class="card infopanel" id="infopanel" ${infoOpen?"":"hidden"}><p style="margin:0 0 6px">Every tier is worth points (GT1 = 100 down to BT6 = 42). A player's overall score is the sum of their points in every gamemode. Tap an icon on a player to see the gamemode and tier.</p><div class="legend" style="padding:0">${legendHTML()}</div></div>`+
     `<div class="bar"><input id="q" type="search" placeholder="Search player" aria-label="Search player" value="${esc(query)}"></div>`+
@@ -422,7 +381,7 @@ function testersView(){
   const list=testersHasCount?[...d].sort((a,b)=>b.tested-a.tested||a.name.localeCompare(b.name)):[...d];
   let rk=0, prev=null; list.forEach((t,i)=>{ if(t.tested!==prev){rk=i+1;prev=t.tested} t.rank=rk; });
   const sub=t=>[t.role,t.modes].filter(Boolean).map(esc).join(" · ");
-  return head+(demo.testers?demoBox("Showing demo data. Paste your Google Sheet link into <b>SHEET_LINK</b> at the top of the script."):"")+
+  return head+(demo.testers?demoBox("Showing demo data."):"")+
     `<div class="plist">`+list.map((t,i)=>`<article class="pc" style="--i:${Math.min(i,12)}">${testersHasCount?`<div class="rkb ${t.rank<=3?"r"+t.rank:""}">${t.rank}</div>`:""}`+
       `<div class="pcb"><div class="pt">${avatar(t.name)}<div class="pn"><div class="nm2">${esc(t.name)}</div><div class="ps">${sub(t)}</div></div>${testersHasCount?`<div class="tnum">${t.tested}<small>tested</small></div>`:""}</div></div></article>`).join("")+`</div>`;
 }
@@ -484,38 +443,38 @@ function route(){
 }
 window.addEventListener("hashchange",route);
 
-/* ---------- data ---------- */
-function tabUrl(tab){
-  const m = SHEET_LINK.match(/\/d\/(?!e\/)([\w-]+)/);
-  return m ? `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(tab)}` : "";
-}
-async function pull(key,tab,parse,demoCsv){
-  if(!SHEET_LINK){
-    if(demoCsv){ store[key]=parse(demoCsv); demo[key]=true; } else store[key]=null;
-    return;
-  }
+/* ---------- data (from the bot's link; the last good copy is kept in this browser) ---------- */
+const CACHE_KEY="whitetier-data";
+let usingSaved=false;
+async function loadData(){
   try{
-    const url=tabUrl(tab); if(!url) throw new Error("bad link");
-    const res=await fetch(url+"&t="+Date.now());
+    const res=await fetch(DATA_URL,{cache:"no-store"});
     if(!res.ok) throw new Error(res.status);
-    const v=parse(await res.text());
-    store[key]=(Array.isArray(v)?v.length:v.players.length)?v:null;   // empty tab = coming soon
-    demo[key]=false;
-  }catch(e){ store[key]={error:true}; }
+    const j=await res.json();
+    try{localStorage.setItem(CACHE_KEY,JSON.stringify(j))}catch(e){}
+    usingSaved=false;
+    return j;
+  }catch(e){
+    // server unreachable (maintenance etc.): show the last copy this browser saved, if there is one
+    try{ const s=localStorage.getItem(CACHE_KEY); if(s){ usingSaved=true; return JSON.parse(s); } }catch(e2){}
+    return null;
+  }
 }
 let lastSig="", loadedOnce=false;
 async function refresh(){
-  await Promise.all([
-    pull("bedrock",TAB_BEDROCK,parsePlayers,DEMO_BEDROCK),
-    pull("java",TAB_JAVA,parsePlayers,null),
-    pull("testers",TAB_TESTERS,parseTesters,DEMO_TESTERS)
-  ]);
-  // if a tab doesn't exist, Google sends the first tab instead: don't show Bedrock twice
-  const b=store.bedrock, j=store.java;
-  if(b&&j&&b.players&&j.players&&JSON.stringify(b.players.map(p=>p.name))===JSON.stringify(j.players.map(p=>p.name))) store.java=null;
-  updated=new Date().toLocaleTimeString();
+  const j=await loadData();
+  if(j){
+    const modes=Array.isArray(j.gamemodes)?j.gamemodes:[];
+    const b=buildPlayers(j.bedrock,modes), jv=buildPlayers(j.java,modes), t=buildTesters(j.testers);
+    store.bedrock=b.players.length?b:null;                              // empty list = coming soon
+    store.java=jv.players.length?jv:null;
+    store.testers=t.length?t:null;
+  }else{
+    ["bedrock","java","testers"].forEach(k=>{ if(store[k]===undefined) store[k]={error:true}; });   // keep what is already shown
+  }
+  updated=new Date().toLocaleTimeString()+(usingSaved?" (saved copy, server unreachable)":"");
   const sig=JSON.stringify([store.bedrock,store.java,store.testers]);
-  if(sig!==lastSig){ lastSig=sig; render(!loadedOnce); }               // only redraw when the sheet actually changed
+  if(sig!==lastSig){ lastSig=sig; render(!loadedOnce); }               // only redraw when the data actually changed
   else if($("foot")) $("foot").textContent="Checked "+updated+" · refreshes automatically";
   loadedOnce=true;
 }
