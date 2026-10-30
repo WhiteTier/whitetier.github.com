@@ -196,15 +196,21 @@ const DISCORD_INVITE = "https://discord.gg/9tnX6EDJ6C";
 // Where the leaderboard data comes from: the bot's read-only link.
 const DATA_URL = "https://whitetier.hidenplay.net/api/tiers";
 const REFRESH_SECONDS = 60;
-// Tier groups, best to worst. Every step down is 2 points: GT1 = 100 ... BT6 = 42.
-// Anything else (like ??) = not tested = 0 points.
+// Tier groups and points. ?? (not tested) = 0 points.
 const GROUPS = ["GT","HT","LT","NT","BT"];
 const GROUP_NAMES = {GT:"Grand Tier",HT:"High Tier",LT:"Low Tier",NT:"New Tier",BT:"Bad Tier"};
 const OWNER = "WHITEGUY", MAX_PLAYERS = 100;
 /* ================================================== */
 
 const TIERS = [], POINTS = {};
-GROUPS.forEach((g,gi)=>{ for(let n=1;n<=6;n++){ const t=g+n; POINTS[t]=100-2*(gi*6+n-1); TIERS.push(t); } });
+const GROUP_POINTS = {
+  GT:[155,150,145,140,135,130],
+  HT:[125,120,115,110,105,100],
+  LT:[95,90,85,80,75,70],
+  NT:[65,60,55,50,45,40],
+  BT:[35,30,25,20,15,10]
+};
+GROUPS.forEach(g=>{ for(let n=1;n<=6;n++){ const t=g+n; POINTS[t]=GROUP_POINTS[g][n-1]; TIERS.push(t); } });
 const GROUP_COLORS = {GT:"#f2b705",HT:"#5ad0e6",LT:"#5fc27a",NT:"#b9a6e8",BT:"#e08a8a"};
 const COLORS = {}; TIERS.forEach(t=>COLORS[t]=GROUP_COLORS[t.slice(0,2)]);
 
@@ -362,7 +368,7 @@ function boardView(key){
     `<div class="hero"><div><h1 id="htitle">${title}</h1><p class="sub" id="hsub">${subtxt}</p></div></div>`+
     (demo[key]?demoBox("Showing demo data."):"")+
     `<button class="infobtn" id="infobtn" aria-expanded="${infoOpen}">${INFO_ICON}Information</button>`+
-    `<div class="card infopanel" id="infopanel" ${infoOpen?"":"hidden"}><p style="margin:0 0 6px">Every tier is worth points (GT1 = 100 down to BT6 = 42). A player's overall score is the sum of their points in every gamemode. Tap an icon on a player to see the gamemode and tier.</p><div class="legend" style="padding:0">${legendHTML()}</div></div>`+
+    `<div class="card infopanel" id="infopanel" ${infoOpen?"":"hidden"}><p style="margin:0 0 6px">Each tier has its listed point value (GT1 = 155 down to BT6 = 10). ?? means not tested and is worth 0 points. A player's overall score is the sum of their points in every gamemode. Tap an icon on a player to see the gamemode and tier.</p><div class="legend" style="padding:0">${legendHTML()}</div></div>`+
     `<div class="bar"><input id="q" type="search" placeholder="Search player" aria-label="Search player" value="${esc(query)}"></div>`+
     `<div id="list" class="plist"></div>`+
     `<p class="foot" id="foot">${updated?"Checked "+updated+" · refreshes automatically":""}</p>`;
