@@ -105,6 +105,10 @@ input{font:inherit;width:100%;padding:12px 16px;border:1px solid var(--line);bac
 .tb{display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:0;cursor:pointer;font:inherit}
 .enter .tb{animation:popIn .9s var(--ease) both;animation-delay:calc(var(--i,0)*var(--step) + var(--j,0)*.12s + .3s)}
 .ic{width:40px;height:40px}.ic svg{width:21px;height:21px}
+.pic{display:block;object-fit:contain;width:24px;height:24px;pointer-events:none;user-select:none}
+.ic .pic{width:27px;height:27px}
+.mt:hover .mi .pic,.mt[aria-pressed="true"] .mi .pic{animation:wiggle 1s ease-in-out}
+.tb:hover .ic .pic,.tb:focus-visible .ic .pic,.tb:active .ic .pic{animation:wiggle 1s ease-in-out}
 .tb:hover .ic svg,.tb:focus-visible .ic svg,.tb:active .ic svg{animation:wiggle 1s ease-in-out}
 .tb:hover .ic{border-color:var(--c)}
 .chip{display:inline-block;min-width:44px;text-align:center;padding:3px 8px;font-weight:700;font-size:13px;color:#16202b;
@@ -125,6 +129,7 @@ input{font:inherit;width:100%;padding:12px 16px;border:1px solid var(--line);bac
   .pc:not(.single) .tl{display:none}
   .pc:not(.single) .tbs{justify-content:flex-end;max-width:62%}
   .ic{width:36px;height:36px}.ic svg{width:19px;height:19px}
+  .ic .pic{width:25px;height:25px}
 }
 /* about */
 h2{font-family:var(--display);font-size:26px;margin:34px 0 14px}
@@ -194,7 +199,7 @@ const SERVER_NAME = "WhiteTire";
 const TAGLINE = "Every player's tier, updated live by our testers.";
 const DISCORD_INVITE = "https://discord.gg/gtkPg8AFZe";
 // Where the leaderboard data comes from: the Google Sheet directly (fast). The bot's link is only the backup.
-const SHEET_ID = "18U55lQflX7AjVRx3TUk3Rq-J0bDU2ffKCr-JgZEg0h8";
+const SHEET_ID = "18U55lQflX7AjVRx3TUk3Rq-J0bDU2ffKCr-JgZEg0h8"; 
 const API_KEY = "AIzaSyDDpgq7agOoOyMJ_bPLknPFKnNKsQZODUI";
 const DATA_URL = "https://whitetier.hidenplay.net/api/tiers";
 const REFRESH_SECONDS = 30;
@@ -229,15 +234,40 @@ const P = {
   flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
   flask:'<path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>',
   axe:'<path d="m14 12-8.5 8.5a2.12 2.12 0 1 1-3-3L11 9"/><path d="M15 13 9 7l4-4 6 6h3a8 8 0 0 1-7 7z"/>',
+  cart:'<path d="M3 6h2l2 9h10l2-7H6"/><circle cx="9" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/>',
   shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>'
 };
-const ICON_COLORS = {trophy:"#e0a800",sword:"#5b8def",heart:"#ef5b73",gem:"#22b8cf",crystal:"#a55eea",trident:"#1cc5a0",tmace:"#f0883e",mace:"#8d99ae",flame:"#f2603a",flask:"#e056a0",axe:"#c98a5a",shield:"#7a8cff"};
+const ICON_COLORS = {trophy:"#e0a800",sword:"#5b8def",heart:"#ef5b73",gem:"#22b8cf",crystal:"#a55eea",trident:"#1cc5a0",tmace:"#f0883e",mace:"#8d99ae",flame:"#f2603a",flask:"#e056a0",axe:"#c98a5a",cart:"#e5533d",shield:"#7a8cff"};
 function modeIcon(name){
   const n=String(name).toLowerCase();
   const k = n==="overall"?"trophy" : n.includes("trident")&&n.includes("mace")?"tmace" : n.includes("trident")?"trident" : n.includes("mace")?"mace"
-    : n.includes("sword")?"sword" : n.includes("uhc")?"heart" : n.includes("diamond")?"gem" : n.includes("cpvp")||n.includes("crystal")?"crystal"
-    : n.includes("neth")?"flame" : n.includes("pot")?"flask" : n.includes("axe")?"axe" : "shield";
+    : n.includes("sword")?"sword" : n.includes("uhc")?"heart" : n.includes("cart")?"cart" : n.includes("pot")?"flask" : n.includes("axe")?"axe"
+    : n.includes("diamond")?"gem" : n.includes("cpvp")||n.includes("crystal")?"crystal" : n.includes("neth")?"flame" : "shield";
   return {p:P[k], c:ICON_COLORS[k]};
+}
+/* picture icons: files in the icons/ folder, picked from the gamemode's name (so "Neth Pot" and "Netherite Pot" both work) */
+function iconFile(name){
+  const n=String(name).toLowerCase(), has=s=>n.includes(s);
+  if(n==="overall") return "overall";
+  if(has("trident")&&has("mace")) return "trident-mace";
+  if(has("trident")) return "trident-pvp";
+  if(has("diamond")&&has("mace")) return "diamond-mace";
+  if(has("mace")) return "mace";
+  if(has("sword")) return "sword";
+  if(has("uhc")) return "uhc";
+  if(has("cart")) return "cart-pvp";
+  if(has("diamond")&&has("pot")) return "diamond-pot";
+  if(has("neth")&&has("pot")) return "neth-pot";
+  if(has("diamond")&&has("axe")) return "diamond-axe";
+  if(has("diamond")) return "diamond-smp";
+  if(has("cpvp")||has("crystal")) return "cpvp";
+  if(has("neth")) return "neth-smp";
+  return null;
+}
+function iconHTML(name){             // the picture, or the old line icon if there is no picture (or it fails to load)
+  const mi=modeIcon(name), f=iconFile(name), svg=svgIcon(mi.p);
+  if(!f) return svg;
+  return `<img class="pic" src="icons/${f}.png" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.style.display=''">`+svg.replace("<svg",'<svg style="display:none"');
 }
 const svgIcon = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 
@@ -312,7 +342,7 @@ function ranked(d,m){
 /* ---------- views ---------- */
 function badge(n,t,j){
   const mi=modeIcon(n);
-  return `<button type="button" class="tb" data-m="${esc(n)}" data-t="${t}" style="--c:${mi.c};--j:${j}" aria-label="${esc(n)} ${t}"><span class="ic">${svgIcon(mi.p)}</span>${chip(t)}</button>`;
+  return `<button type="button" class="tb" data-m="${esc(n)}" data-t="${t}" style="--c:${mi.c};--j:${j}" aria-label="${esc(n)} ${t}"><span class="ic">${iconHTML(n)}</span>${chip(t)}</button>`;
 }
 function playerCard(x,i,m,d){
   const p=x.p, rk=`<div class="rkb ${x.rank<=3?"r"+x.rank:""}">${x.rank}</div>`;
@@ -365,7 +395,7 @@ function boardView(key){
   const m = d.modes.includes(mode[key])||mode[key]==="Overall" ? mode[key] : "Overall"; mode[key]=m;
   const [title,subtxt] = headText(key);
   const tabs = ["Overall",...d.modes].map((n,i)=>{ const mi=modeIcon(n);
-    return `<button class="mt" aria-pressed="${n===m}" data-m="${esc(n)}" style="--c:${mi.c}"><span class="mi">${svgIcon(mi.p)}</span><span>${esc(n)}</span></button>`; }).join("");
+    return `<button class="mt" aria-pressed="${n===m}" data-m="${esc(n)}" style="--c:${mi.c}"><span class="mi">${iconHTML(n)}</span><span>${esc(n)}</span></button>`; }).join("");
   return `<div class="mtabs" id="mtabs"><span class="slider" id="slider"></span>${tabs}</div>`+
     `<div class="hero"><div><h1 id="htitle">${title}</h1><p class="sub" id="hsub">${subtxt}</p></div></div>`+
     (demo[key]?demoBox("Showing demo data."):"")+
