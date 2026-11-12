@@ -193,9 +193,11 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);bor
 const SERVER_NAME = "WhiteTire";
 const TAGLINE = "Every player's tier, updated live by our testers.";
 const DISCORD_INVITE = "https://discord.gg/gtkPg8AFZe";
-// Where the leaderboard data comes from: the bot's read-only link.
+// Where the leaderboard data comes from: the Google Sheet directly (fast). The bot's link is only the backup.
+const SHEET_ID = "18U55lQflX7AjVRx3TUk3Rq-J0bDU2ffKCr-JgZEg0h8";
+const API_KEY = "AIzaSyDDpgq7agOoOyMJ_bPLknPFKnNKsQZODUI";
 const DATA_URL = "https://whitetier.hidenplay.net/api/tiers";
-const REFRESH_SECONDS = 60;
+const REFRESH_SECONDS = 30;
 // Tier groups and points. ?? (not tested) = 0 points.
 const GROUPS = ["GT","HT","LT","NT","BT"];
 const GROUP_NAMES = {GT:"Grand Tier",HT:"High Tier",LT:"Low Tier",NT:"New Tier",BT:"Bad Tier"};
