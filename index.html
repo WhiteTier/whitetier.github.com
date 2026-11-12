@@ -451,10 +451,49 @@ function route(){
 }
 window.addEventListener("hashchange",route);
 
-/* ---------- data (from the bot's link; the last good copy is kept in this browser) ---------- */
+/* ---------- data (straight from the Google Sheet; the bot's link is the backup; the last good copy is kept in this browser) ---------- */
 const CACHE_KEY="whitetier-data";
 let usingSaved=false;
+
+/* ---- read the Google Sheet directly (tabs: Bedrock, Java, Testers) ---- */
+function parseEditionRows(values){
+  if(!values||!values.length) return {modes:[],rows:[]};
+  const header=values[0].map(c=>String(c==null?"":c).trim());
+  const modes=header.slice(2).filter(Boolean);
+  const rows=[];
+  for(const r of values.slice(1)){
+    const player=String(r[0]==null?"":r[0]).trim(); if(!player) continue;
+    const tiers={};
+    header.forEach((g,i)=>{ if(i>=2&&g) tiers[g]=String(r[i]==null?"":r[i]).trim().toUpperCase()||"??"; });
+    rows.push({player,status:String(r[1]==null?"":r[1]).trim().toUpperCase(),tiers});
+  }
+  return {modes,rows};
+}
+async function loadFromSheet(){
+  const ranges=["Bedrock","Java","Testers"].map(t=>"ranges="+encodeURIComponent("'"+t+"'")).join("&");
+  const url="https://sheets.googleapis.com/v4/spreadsheets/"+SHEET_ID+"/values:batchGet?"+ranges+"&valueRenderOption=FORMATTED_VALUE&key="+API_KEY;
+  const res=await fetch(url,{cache:"no-store"});
+  if(!res.ok) throw new Error(res.status);
+  const j=await res.json();
+  const v=(j.valueRanges||[]).map(x=>x.values||[]);
+  const b=parseEditionRows(v[0]), jv=parseEditionRows(v[1]);
+  const testers=(v[2]||[]).slice(1).map(r=>({name:String(r[0]==null?"":r[0]).trim(),role:String(r[1]==null?"":r[1]).trim()||"Tester",modes:String(r[2]==null?"":r[2]).trim()||"All gamemodes",tested:parseInt(r[3],10)||0})).filter(t=>t.name);
+  return {gamemodes:[...new Set([...b.modes,...jv.modes])], bedrock:b.rows, java:jv.rows, testers};
+}
+
 async function loadData(){
+  // 1) the Google Sheet directly (changes show up within seconds)
+  if(!String(SHEET_ID).startsWith("PASTE")&&!String(API_KEY).startsWith("PASTE")){
+    try{
+      const j=await loadFromSheet();
+      if(j.bedrock.length||j.java.length){          // an empty answer is never trusted
+        try{localStorage.setItem(CACHE_KEY,JSON.stringify(j))}catch(e){}
+        usingSaved=false;
+        return j;
+      }
+    }catch(e){}
+  }
+  // 2) backup: the bot's link
   try{
     const res=await fetch(DATA_URL,{cache:"no-store"});
     if(!res.ok) throw new Error(res.status);
@@ -463,7 +502,7 @@ async function loadData(){
     usingSaved=false;
     return j;
   }catch(e){
-    // server unreachable (maintenance etc.): show the last copy this browser saved, if there is one
+    // nothing reachable: show the last copy this browser saved, if there is one
     try{ const s=localStorage.getItem(CACHE_KEY); if(s){ usingSaved=true; return JSON.parse(s); } }catch(e2){}
     return null;
   }
