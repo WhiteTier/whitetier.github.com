@@ -199,10 +199,12 @@ const SERVER_NAME = "WhiteTire";
 const TAGLINE = "Every player's tier, updated live by our testers.";
 const DISCORD_INVITE = "https://discord.gg/gtkPg8AFZe";
 // Where the leaderboard data comes from: the Google Sheet directly (fast). The bot's link is only the backup.
-const SHEET_ID = "18U55lQflX7AjVRx3TUk3Rq-J0bDU2ffKCr-JgZEg0h8"; 
-const API_KEY = "AIzaSyDDpgq7agOoOyMJ_bPLknPFKnNKsQZODUI";
+const SHEET_ID = "PASTE_SHEET_ID_HERE";
+const API_KEY = "PASTE_API_KEY_HERE";
 const DATA_URL = "https://whitetier.hidenplay.net/api/tiers";
 const REFRESH_SECONDS = 30;
+// Gamemode icons: "classic" = the original line icons (what the admins prefer), "pixel" = the Minecraft pictures from the icons/ folder.
+const ICON_STYLE = "classic";
 // Tier groups and points. ?? (not tested) = 0 points.
 const GROUPS = ["GT","HT","LT","NT","BT"];
 const GROUP_NAMES = {GT:"Grand Tier",HT:"High Tier",LT:"Low Tier",NT:"New Tier",BT:"Bad Tier"};
@@ -229,19 +231,25 @@ const P = {
   gem:'<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>',
   crystal:'<path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z"/>',
   trident:'<path d="M12 22V7"/><path d="M6 3v5a6 6 0 0 0 12 0V3"/><path d="M12 3v4"/>',
-  tmace:'<path d="M12 20V7"/><path d="M6 3v5a6 6 0 0 0 12 0V3"/><path d="M12 3v4"/><circle cx="12" cy="21" r="1.5"/>',
+  tmace:'<path d="M7 21V8"/><path d="M4 3v3.5a3 3 0 0 0 6 0V3"/><path d="M7 3v5"/><path d="M17 21v-9"/><circle cx="17" cy="8" r="3.5"/><path d="M17 2v2.5"/><path d="M21.5 8H20.5"/>',
   mace:'<circle cx="15" cy="9" r="5"/><path d="m11.5 12.5-8 8"/><path d="M15 2v2M15 14v2M8 9h2M20 9h2"/>',
   flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
   flask:'<path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>',
   axe:'<path d="m14 12-8.5 8.5a2.12 2.12 0 1 1-3-3L11 9"/><path d="M15 13 9 7l4-4 6 6h3a8 8 0 0 1-7 7z"/>',
-  cart:'<path d="M3 6h2l2 9h10l2-7H6"/><circle cx="9" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/>',
+  daxe:'<path d="m14 12-8.5 8.5a2.12 2.12 0 1 1-3-3L11 9"/><path d="M15 13 9 7l4-4 6 6h3a8 8 0 0 1-7 7z"/>',
+  cart:'<path d="M3 9h18l-2.2 8H5.2z"/><path d="M9 9V5h6v4"/><circle cx="8" cy="20" r="1.5"/><circle cx="16" cy="20" r="1.5"/>',
+  dmace:'<path d="M15 2.5 20.5 8 15 13.5 9.5 8z"/><path d="m11.5 11.5-8.5 8.5"/><path d="m3.5 17 3.5 3.5"/>',
+  dpot:'<path d="M10 2v6.2"/><path d="M14 2v6.2"/><path d="M8.5 2h7"/><path d="M14 8.2a6 6 0 1 1-4 0"/><path d="m12 11.5 2.3 2.5-2.3 2.5-2.3-2.5z"/>',
+  npot:'<path d="M10 2v6.2"/><path d="M14 2v6.2"/><path d="M8.5 2h7"/><path d="M14 8.2a6 6 0 1 1-4 0"/><path d="M12 12c1.3 1.1 2.3 1.9 2.3 3.2a2.3 2.3 0 0 1-4.6 0c0-1.3 1-2.1 2.3-3.2z"/>',
   shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>'
 };
-const ICON_COLORS = {trophy:"#e0a800",sword:"#5b8def",heart:"#ef5b73",gem:"#22b8cf",crystal:"#a55eea",trident:"#1cc5a0",tmace:"#f0883e",mace:"#8d99ae",flame:"#f2603a",flask:"#e056a0",axe:"#c98a5a",cart:"#e5533d",shield:"#7a8cff"};
+const ICON_COLORS = {trophy:"#e0a800",sword:"#5b8def",heart:"#ef5b73",gem:"#22b8cf",crystal:"#a55eea",trident:"#1cc5a0",tmace:"#f0883e",mace:"#8d99ae",flame:"#f2603a",flask:"#e056a0",axe:"#c98a5a",cart:"#e5533d",dmace:"#22b8cf",dpot:"#2fa4d9",npot:"#c0392b",daxe:"#22b8cf",shield:"#7a8cff"};
 function modeIcon(name){
   const n=String(name).toLowerCase();
-  const k = n==="overall"?"trophy" : n.includes("trident")&&n.includes("mace")?"tmace" : n.includes("trident")?"trident" : n.includes("mace")?"mace"
-    : n.includes("sword")?"sword" : n.includes("uhc")?"heart" : n.includes("cart")?"cart" : n.includes("pot")?"flask" : n.includes("axe")?"axe"
+  const k = n==="overall"?"trophy" : n.includes("trident")&&n.includes("mace")?"tmace" : n.includes("trident")?"trident" : n.includes("diamond")&&n.includes("mace")?"dmace" : n.includes("mace")?"mace"
+    : n.includes("sword")?"sword" : n.includes("uhc")?"heart" : n.includes("cart")?"cart"
+    : n.includes("diamond")&&n.includes("pot")?"dpot" : n.includes("neth")&&n.includes("pot")?"npot" : n.includes("pot")?"flask"
+    : n.includes("diamond")&&n.includes("axe")?"daxe" : n.includes("axe")?"axe"
     : n.includes("diamond")?"gem" : n.includes("cpvp")||n.includes("crystal")?"crystal" : n.includes("neth")?"flame" : "shield";
   return {p:P[k], c:ICON_COLORS[k]};
 }
@@ -266,7 +274,7 @@ function iconFile(name){
 }
 function iconHTML(name){             // the picture, or the old line icon if there is no picture (or it fails to load)
   const mi=modeIcon(name), f=iconFile(name), svg=svgIcon(mi.p);
-  if(!f) return svg;
+  if(ICON_STYLE!=="pixel"||!f) return svg;
   return `<img class="pic" src="icons/${f}.png" alt="" draggable="false" onerror="this.style.display='none';this.nextElementSibling.style.display=''">`+svg.replace("<svg",'<svg style="display:none"');
 }
 const svgIcon = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
