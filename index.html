@@ -67,7 +67,7 @@ h1{font-family:var(--display);font-size:clamp(28px,6vw,46px);line-height:1.1;mar
 .mt:hover{color:var(--ink)}
 .mt[aria-pressed="true"]{color:var(--bg);font-weight:700}
 .mt span:last-child{text-align:center;line-height:1.25}
-@media (min-width:760px){.mtabs{flex-wrap:wrap;overflow:visible;cursor:default}.mt{flex:1 1 84px;padding:10px 6px 8px}}
+@media (min-width:760px){.mtabs{display:grid;grid-template-columns:repeat(var(--cols,7),minmax(0,1fr));overflow:visible;cursor:default}.mt{flex:none;min-width:0;padding:10px 6px 8px}}
 .mi,.ic{display:grid;place-items:center;border-radius:50%;color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--card));border:1px solid color-mix(in srgb,var(--c) 40%,transparent);flex:none}
 .mi{width:34px;height:34px}.mi svg{width:19px;height:19px}
 .mt:hover .mi svg{animation:wiggle 1s ease-in-out}
@@ -199,7 +199,7 @@ const SERVER_NAME = "WhiteTire";
 const TAGLINE = "Every player's tier, updated live by our testers.";
 const DISCORD_INVITE = "https://discord.gg/gtkPg8AFZe";
 // Where the leaderboard data comes from: the Google Sheet directly (fast). The bot's link is only the backup.
-const SHEET_ID = "18U55lQflX7AjVRx3TUk3Rq-J0bDU2ffKCr-JgZEg0h8"; 
+const SHEET_ID = "18U55lQflX7AjVRx3TUk3Rq-J0bDU2ffKCr-JgZEg0h8";
 const API_KEY = "AIzaSyDDpgq7agOoOyMJ_bPLknPFKnNKsQZODUI";
 const DATA_URL = "https://whitetier.hidenplay.net/api/tiers";
 const REFRESH_SECONDS = 30;
@@ -383,8 +383,15 @@ function placeNavInd(animate){        // moves the blue bar over the picked bott
 let dragMoved=false, dragBar=null, dragX=0, dragL=0;
 window.addEventListener("pointermove",e=>{ if(!dragBar) return; const dx=e.clientX-dragX; if(Math.abs(dx)>5){ dragMoved=true; dragBar.scrollLeft=dragL-dx; } });
 window.addEventListener("pointerup",()=>{ dragBar=null; });
-window.addEventListener("resize",()=>{ placeSlider(false); placeNavInd(false); });
-if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ placeSlider(false); placeNavInd(false); });
+window.addEventListener("resize",()=>{ layoutTabs(); placeSlider(false); placeNavInd(false); });
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ layoutTabs(); placeSlider(false); placeNavInd(false); });
+function layoutTabs(){               // desktop: pick the number of columns so the rows are even (e.g. 14 tabs = 7 + 7)
+  const bar=$("mtabs"); if(!bar) return;
+  if(!(window.matchMedia&&window.matchMedia("(min-width:760px)").matches)) return;   // phones keep one scrolling row
+  const n=bar.querySelectorAll(".mt").length;
+  const maxCols=Math.max(1,Math.floor((bar.clientWidth-12)/84));
+  bar.style.setProperty("--cols",Math.ceil(n/Math.ceil(n/maxCols)));
+}
 function selectMode(key,m){          // changes only the list and heading, the rest of the page stays still
   mode[key]=m;
   document.querySelectorAll(".mt").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===m)));
@@ -475,6 +482,7 @@ function render(enter){
     bar.addEventListener("wheel",e=>{ if(bar.scrollWidth>bar.clientWidth && Math.abs(e.deltaY)>Math.abs(e.deltaX)){ bar.scrollLeft+=e.deltaY; e.preventDefault(); } },{passive:false});
     bar.addEventListener("pointerdown",e=>{ if(e.pointerType==="mouse"){ dragBar=bar; dragX=e.clientX; dragL=bar.scrollLeft; dragMoved=false; } });
     bar.addEventListener("click",e=>{ if(dragMoved){ e.stopPropagation(); e.preventDefault(); dragMoved=false; } },true);
+    layoutTabs();
     placeSlider(false);
     $("infobtn").onclick=()=>{ infoOpen=!infoOpen; $("infopanel").hidden=!infoOpen; $("infobtn").setAttribute("aria-expanded",infoOpen); };
     const q=$("q"); q.oninput=()=>{ query=q.value.trim(); $("view").className=""; fillBoard(view); };
